@@ -72,24 +72,31 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(156 163 175 / 0.1)'%3E%3Cpath d='M0 .5H32V32'/%3E%3C/svg%3E");
         }
 
-        /* Animation for rotating text */
+        /* Animation for rotating text - NEW ROBUST METHOD */
         .word-container {
             display: inline-block;
             position: relative;
-            height: 1.2em; 
             vertical-align: baseline;
-            overflow: hidden;
+            text-align: center;
+        }
+        .word-sizer {
+            visibility: hidden; /* Takes up space but is invisible */
         }
         .rotating-word {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0; /* Ensures it's centered in the container */
+            bottom: 0;
             display: inline-block;
             opacity: 0;
-            animation: rotate-word 1.5s forwards; 
+            animation: rotate-word 1.5s ease-in-out forwards; 
         }
-
+        
         @keyframes rotate-word {
-            0% { transform: translateY(100%); opacity: 0; }
-            15% { transform: translateY(0); opacity: 1; }
-            85% { transform: translateY(0); opacity: 1; }
+            0%   { transform: translateY(100%); opacity: 0; }
+            20%  { transform: translateY(0); opacity: 1; }
+            80%  { transform: translateY(0); opacity: 1; }
             100% { transform: translateY(-100%); opacity: 0; }
         }
 
@@ -338,7 +345,7 @@
         // --- PAGES ---
         const HomePage = () => {
             const { setPage } = useAppContext();
-            const rotatingWords = ['AI Optimisation', 'Placements', 'Upskilling', 'Preparation'];
+            const rotatingWords = ['Internships', 'Placements', 'Upskilling'];
             const [currentIndex, setCurrentIndex] = React.useState(0);
             const [key, setKey] = React.useState(0);
 
@@ -358,12 +365,13 @@
                         <div className="container mx-auto px-6 text-center relative">
                             <h1 className="text-4xl md:text-6xl font-extrabold text-white leading-tight">
                                 <div className="flex justify-center items-baseline">
-                                  <span>Xperto</span>,
-                                  <span className="word-container mx-2 text-[#00C853]">
-                                    <span className="rotating-word" key={key}>
-                                        {rotatingWords[currentIndex]}
+                                    <span>Xperto,</span>
+                                    <span className="word-container mx-2 text-[#00C853]">
+                                        <span className="word-sizer">Placements</span> {/* Invisible sizer */}
+                                        <span className="rotating-word" key={key}>
+                                            {rotatingWords[currentIndex]}
+                                        </span>
                                     </span>
-                                  </span>
                                 </div>
                                 <div>Simplified!</div>
                                 <div>
