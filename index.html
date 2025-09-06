@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xperto - Build Your Future</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React Libraries -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- Babel for JSX Transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- PDF.js for Resume Parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;</script>
 
@@ -127,10 +123,14 @@
         ];
         
         const partnerLogos = [
-            { name: 'CRED', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#475569">CRED</text></svg> },
-            { name: 'Upstox', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#475569">Upstox</text></svg> },
-            { name: 'Razorpay', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#475569">Razorpay</text></svg> },
-            { name: 'Swiggy', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#475569">Swiggy</text></svg> },
+            { name: 'CRED', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#f8f9fa">CRED</text></svg> },
+            { name: 'Upstox', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#2d00f7">Upstox</text></svg> },
+            { name: 'Razorpay', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#0296ff">Razorpay</text></svg> },
+            { name: 'Swiggy', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#fc8019">Swiggy</text></svg> },
+            { name: 'Zomato', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#ef4f5f">Zomato</text></svg> },
+            { name: 'PhonePe', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#5f259f">PhonePe</text></svg> },
+            { name: 'Nykaa', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#fc2779">Nykaa</text></svg> },
+            { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
 
         // --- GEMINI API HELPER ---
@@ -197,10 +197,18 @@
             </svg>
         );
 
-        const AiOptimizerIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-[#00C853]" fill="none" viewBox="0 0 64 64">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M32 54.667c12.52 0 22.667-10.147 22.667-22.667S44.52 9.333 32 9.333 9.333 19.48 9.333 32 19.48 54.667 32 54.667z"></path>
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M26.667 32a5.333 5.333 0 1010.666 0 5.333 5.333 0 00-10.666 0zM32 42.667V48M32 16v-5.333M42.667 32H48M16 32h-5.333M40.533 23.467l3.734-3.734M19.733 44.267l3.734-3.734M40.533 40.533l3.734 3.734M19.733 19.733l3.734 3.734"></path>
+        const AiResumeIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-[#00C853]" viewBox="0 0 64 64" fill="none">
+                {/* Document Outline */}
+                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M24 12H16C13.7909 12 12 13.7909 12 16V48C12 50.2091 13.7909 52 16 52H48C50.2091 52 52 50.2091 52 48V24" />
+                {/* Document Fold */}
+                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M24 12V24H36" />
+                {/* AI Sparkles */}
+                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M44 14L46 12" />
+                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M50 20L52 18" />
+                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M48 24V26" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M40 22L41 21" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M50 14L51 13" />
             </svg>
         );
         
@@ -397,7 +405,7 @@
                             <div className="relative overflow-hidden group">
                                 <div className="flex animate-marquee group-hover:[animation-play-state:paused]">
                                     {[...partnerLogos, ...partnerLogos, ...partnerLogos, ...partnerLogos].map((p, i) => (
-                                        <div key={i} className="flex-shrink-0 w-48 mx-4 flex items-center justify-center grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all duration-300">
+                                        <div key={i} className="flex-shrink-0 w-48 mx-4 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity duration-300">
                                             {p.logo}
                                         </div>
                                     ))}
@@ -409,7 +417,7 @@
                         <div className="container mx-auto px-6">
                             <div className="grid md:grid-cols-2 gap-16 items-center">
                                 <div className="max-w-md mx-auto">
-                                   <AiOptimizerIcon />
+                                   <AiResumeIcon />
                                 </div>
                                 <div>
                                     <h2 className="text-4xl font-bold text-white">Supercharge Your Career with <span className="text-[#00C853]">AI</span></h2>
@@ -845,4 +853,3 @@
     </script>
 </body>
 </html>
-
