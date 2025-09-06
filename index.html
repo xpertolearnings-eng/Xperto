@@ -49,7 +49,7 @@
             100% { transform: translateX(-50%); } 
         }
         .animate-marquee { 
-            animation: marquee 30s linear infinite; 
+            animation: marquee 15s linear infinite; 
         }
         
         @keyframes fade-in {
@@ -201,13 +201,24 @@
             </svg>
         );
 
-        const ResumeIcon = () => (
-             <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-[#00C853]" viewBox="0 0 64 64" fill="none">
-                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M24 12H16C13.7909 12 12 13.7909 12 16V48C12 50.2091 13.7909 52 16 52H48C50.2091 52 52 50.2091 52 48V24" />
-                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M24 12V24H36" />
-                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M20 32H44" />
-                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M20 38H44" />
-                <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M20 44H40" />
+        const AchievementIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-[#00C853]" viewBox="0 0 64 64" fill="none">
+                {/* Sparkles */}
+                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M14 20L16 18" />
+                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M50 20L48 18" />
+                <path stroke="#64ffda" strokeWidth="1.5" strokeLinecap="round" d="M54 32L56 32" />
+                <path stroke="#64ffda" strokeWidth="1.5" strokeLinecap="round" d="M10 32L8 32" />
+                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M32 12V8" />
+
+                {/* Abstract Person Figure */}
+                <circle cx="32" cy="22" r="6" stroke="currentColor" strokeWidth="2"/>
+                <path d="M22 44C22 37.3726 26.4772 32 32 32C37.5228 32 42 37.3726 42 44" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                
+                {/* Podium/Trophy base */}
+                <path d="M16 54H48" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M20 44H44" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M20 44V54" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M44 44V54" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
         );
         
@@ -432,10 +443,10 @@
                     <section className="py-12 bg-[#0A0A0A] border-y border-gray-800">
                         <div className="container mx-auto px-4 sm:px-6">
                             <h3 className="text-center text-base md:text-lg font-medium text-gray-500 mb-8">Trusted by talent acquisition teams at top Indian startups</h3>
-                            <div className="relative overflow-hidden group">
-                                <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused]">
+                            <div className="relative overflow-hidden group -mx-4">
+                                <div className="animate-marquee group-hover:[animation-play-state:paused] whitespace-nowrap">
                                     {[...partnerLogos, ...partnerLogos].map((p, i) => (
-                                        <div key={i} className="flex-shrink-0 w-28 mx-2 sm:w-36 sm:mx-3 md:w-48 md:mx-4 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity duration-300">
+                                        <div key={i} className="inline-flex items-center justify-center align-middle w-28 mx-2 sm:w-36 sm:mx-3 md:w-48 md:mx-4 opacity-80 hover:opacity-100 transition-opacity duration-300">
                                             {p.logo}
                                         </div>
                                     ))}
@@ -447,7 +458,7 @@
                         <div className="container mx-auto px-4 sm:px-6">
                             <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
                                 <div className="max-w-md mx-auto order-last md:order-first">
-                                   <ResumeIcon />
+                                   <AchievementIcon />
                                 </div>
                                 <div>
                                     <h2 className="text-3xl sm:text-4xl font-bold text-white">Supercharge Your Career with <span className="text-[#00C853]">AI</span></h2>
