@@ -137,123 +137,89 @@
             { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
 
-        // --- [FIXED] INTELLIGENT MOCK API to replace failing live call ---
+        // --- [FINAL FIX] LIVE GEMINI API CALL WITH ROBUST PROMPT ---
         const callGeminiAPI = async (resumeText) => {
-            console.log("Simulating AI analysis with an intelligent mock function.");
+             const apiKey = ""; // Left blank as per instructions for Canvas environment
+             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-            // This function simulates a real AI by performing a basic analysis on the resume text.
-            const generateMockReport = (text) => {
-                const lowerCaseText = text.toLowerCase();
-                let report = { overallScore: 0, overallSummary: "", sections: [] };
+            // This detailed system prompt instructs the AI on its persona, rules, and output format.
+            const systemPrompt = `You are Xperto AI, an expert resume analyzer for students and young professionals in India. Your analysis is based on modern, ATS-friendly resume guidelines. You MUST:
+1.  **Analyze Holistically**: Read the entire resume to understand the candidate's profile.
+2.  **Be Specific**: Base every finding and score directly on the provided resume text. Do not invent information.
+3.  **Follow ATS Rules**: Emphasize using standard fonts, a one-page limit, and no graphics. The core of your feedback should revolve around action verbs, quantifiable achievements (metrics like %, ₹, numbers), and keyword optimization.
+4.  **Structure**: Analyze the Experience, Skills, Projects, and Education sections. If a section is missing, note it and give a low score.
+5.  **Score Critically**: 0-60 (Red) for major issues. 61-90 (Yellow) for resumes that are good but need improvement. 91-100 (Green) for excellent, well-quantified resumes.
+6.  **Provide Actionable Examples**: The "before" examples must be plausible phrases from the resume. The "after" examples must be realistic, powerful improvements.`;
 
-                // --- Static data for locked content ---
-                const lockedContentData = {
-                    experience: {
-                        detailedTips: ["Every bullet point should showcase a result. Use the STAR method (Situation, Task, Action, Result) to frame your accomplishments.", "Review the job description for keywords and integrate them naturally into your experience bullet points."],
-                        examples: [{ before: "Responsible for testing the application.", after: "Implemented a testing suite using Jest and React Testing Library, boosting test coverage by 45% and eliminating 15+ pre-production bugs." }, { before: "Worked on a team to build a website.", after: "Collaborated in an Agile team of 4 to develop a client-facing portal, delivering the project 2 weeks ahead of schedule."}],
-                        explanation: "As per the ATS guide, recruiters and automated systems look for concrete data. 'Increased page speed by 40%' is far more powerful than just 'Improved page speed' because it demonstrates the scale of your impact."
-                    },
-                    skills: {
-                        detailedTips: ["Analyze 3-5 job descriptions for your target role and list the most frequently mentioned skills first.", "Include a 'Soft Skills' category with terms like 'Team Collaboration', 'Agile Methodologies', and 'Problem Solving' to pass ATS filters."],
-                        examples: [{ before: "JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git, Python.", after: "Languages: JavaScript (ES6+), Python, SQL\nFrameworks: React.js, Node.js, Express.js\nDatabases: MongoDB\nTools & Technologies: Git, Docker, Jest, Webpack, REST APIs" }],
-                        explanation: "ATS software often scans for specific keywords. A well-organized and keyword-optimized skills section ensures your resume gets ranked higher and noticed by recruiters."
-                    },
-                    projects: {
-                        detailedTips: ["For each project, explicitly state your role (e.g., 'Sole Developer', 'Frontend Lead').", "Add direct, clickable links to GitHub and a live Vercel/Netlify deployment. Ensure repositories have a clean README.md file."],
-                        examples: [{ before: "Portfolio Website: A personal website to showcase my work. Built with React.", after: "Personal Portfolio Website | [Live Link] | [GitHub Link]\n- Developed a fully responsive portfolio utilizing React and Tailwind CSS, deployed on Vercel.\n- Implemented performance optimizations that resulted in a 98/100 Google Lighthouse score, improving load time by 40%." }],
-                        explanation: "Your projects are tangible proof of your skills. Providing links allows recruiters to see your code quality and the final product, making your application much stronger."
-                    },
-                    education: {
-                        detailedTips: ["Add a 'Relevant Coursework' line to list classes that are directly related to the jobs you're applying for (e.g., 'Data Structures & Algorithms', 'Web Development').", "If you've received any honors like 'Dean's List' or scholarships, add them as a bullet point to stand out."],
-                        examples: [{ before: "Bachelor of Technology in Computer Science | State University | 2020-2024", after: "Bachelor of Technology in Computer Science | State University | 2020-2024\n- GPA: 3.8/4.0 (Dean's List 2022, 2023)\n- Relevant Coursework: Data Structures, Algorithms, Database Management, Operating Systems" }],
-                        explanation: "For students and recent graduates, the education section is critical. Highlighting relevant coursework and academic success demonstrates a strong foundation in key areas."
-                    }
-                };
+            // The user prompt provides the resume text and specifies the required JSON output structure.
+            const userPrompt = `Analyze the following resume text based on the guidelines. Provide your output *only* in valid JSON format. Do not include any other text or markdown formatting outside of the JSON structure.
 
-                // --- Dynamic Analysis Simulation ---
-                
-                // 1. Experience Analysis
-                let expScore = 60;
-                const weakVerbs = (lowerCaseText.match(/responsible for|worked on|assisted with/g) || []).length;
-                const strongVerbs = (lowerCaseText.match(/developed|engineered|led|managed|created|launched|optimized/g) || []).length;
-                const metrics = (lowerCaseText.match(/\d+%|\d+ ?k|\$\d+/g) || []).length;
-                
-                if (strongVerbs > weakVerbs) expScore += 15;
-                if (weakVerbs > strongVerbs) expScore -= 15;
-                if (metrics > 1) expScore += 20; else expScore -=10;
-                
-                report.sections.push({
-                  id: 'experience', title: 'Experience', score: Math.max(40, Math.min(95, expScore)),
-                  findings: [
-                      strongVerbs > weakVerbs ? "Good use of some action verbs." : "Uses passive language instead of strong action verbs.",
-                      metrics > 1 ? "Includes some quantifiable achievements." : "Lacks measurable results and metrics."
-                  ],
-                  quickTip: "Strengthen bullet points by starting with a powerful action verb and adding a number or metric to show impact.",
-                  lockedContent: lockedContentData.experience
-                });
-                
-                // 2. Skills Analysis
-                let skillsScore = 55;
-                const skillCategories = (lowerCaseText.match(/languages:|frameworks:|tools:|databases:/g) || []).length;
-                if (skillCategories > 1) skillsScore += 30;
-                if (lowerCaseText.includes('agile') || lowerCaseText.includes('collaboration')) skillsScore += 10;
-                
-                report.sections.push({
-                    id: 'skills', title: 'Skills', score: Math.max(45, Math.min(95, skillsScore)),
-                    findings: [
-                        skillCategories > 1 ? "Skills section appears to be categorized." : "Skills are not grouped into categories like 'Languages' or 'Tools'.",
-                        "Could benefit from adding more job-relevant soft skills."
-                    ],
-                    quickTip: "Group your skills into clear categories to improve readability for both recruiters and ATS.",
-                    lockedContent: lockedContentData.skills
-                });
-                
-                // 3. Projects Analysis
-                let projScore = 65;
-                const hasGithub = lowerCaseText.includes('github.com');
-                const hasLiveLink = lowerCaseText.includes('vercel') || lowerCaseText.includes('netlify') || lowerCaseText.includes('live demo');
-                if (hasGithub) projScore += 15;
-                if(hasLiveLink) projScore +=10;
+            Resume Text:
+            ---
+            ${resumeText}
+            ---
 
-                report.sections.push({
-                   id: 'projects', title: 'Projects', score: Math.max(50, Math.min(95, projScore)),
-                    findings: [
-                       "Project descriptions are present.",
-                       hasGithub || hasLiveLink ? "Includes links to repositories or live demos." : "Missing links to GitHub or live demos, which are crucial for showcasing work."
-                    ],
-                    quickTip: "Ensure every project includes a clickable link to a GitHub repository with a well-written README file.",
-                    lockedContent: lockedContentData.projects
-                });
+            JSON Format Required:
+            {
+              "overallScore": <number between 0-100>,
+              "overallSummary": "<string, 1-2 concise sentences>",
+              "sections": [
+                {
+                  "id": "experience", "title": "Experience", "score": <number>, "findings": ["<string based on resume content>", "<string based on resume content>"], "quickTip": "<actionable string>",
+                  "lockedContent": { "detailedTips": ["<string>", "<string>"], "examples": [{"before": "<plausible phrase from resume>", "after": "<improved string with metrics>"}], "explanation": "<string explaining the 'why'>"}
+                },
+                {
+                  "id": "skills", "title": "Skills", "score": <number>, "findings": ["<string>", "<string>"], "quickTip": "<string>",
+                  "lockedContent": { "detailedTips": ["<string>", "<string>"], "examples": [{"before": "<plausible phrase from resume>", "after": "<categorized/improved skills list>"}], "explanation": "<string>"}
+                },
+                {
+                  "id": "projects", "title": "Projects", "score": <number>, "findings": ["<string>", "<string>"], "quickTip": "<string>",
+                  "lockedContent": { "detailedTips": ["<string>", "<string>"], "examples": [{"before": "<plausible phrase from resume>", "after": "<improved project description with links/metrics>"}], "explanation": "<string>"}
+                },
+                {
+                  "id": "education", "title": "Education", "score": <number>, "findings": ["<string>", "<string>"], "quickTip": "<string>",
+                  "lockedContent": { "detailedTips": ["<string>", "<string>"], "examples": [{"before": "<plausible phrase from resume>", "after": "<improved education entry with GPA/coursework>"}], "explanation": "<string>"}
+                }
+              ]
+            }`;
 
-                // 4. Education Analysis
-                let eduScore = 70;
-                if(lowerCaseText.includes('gpa') && (lowerCaseText.match(/3\.[5-9]|4\.0/g) || []).length > 0) eduScore += 15;
-                if(lowerCaseText.includes('dean\'s list') || lowerCaseText.includes('scholarship')) eduScore += 10;
-
-                 report.sections.push({
-                   id: 'education', title: 'Education', score: Math.max(60, Math.min(95, eduScore)),
-                    findings: [
-                       "Education section is clearly formatted.",
-                       eduScore > 80 ? "Good inclusion of academic achievements." : "Could be enhanced by adding a high GPA, relevant coursework, or academic honors."
-                    ],
-                    quickTip: "If your GPA is above 3.5 (or equivalent), make sure it's clearly listed. Also, add a 'Relevant Coursework' line.",
-                    lockedContent: lockedContentData.education
-                });
-
-                // --- Final Calculation ---
-                const totalScore = report.sections.reduce((acc, s) => acc + s.score, 0);
-                report.overallScore = Math.round(totalScore / report.sections.length);
-                report.overallSummary = `This resume has a solid foundation with a score of ${report.overallScore}. The main areas for improvement are quantifying experience and structuring the skills section for better ATS performance.`;
-                
-                return report;
+            const payload = {
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ parts: [{ text: userPrompt }] }],
+                generationConfig: { responseMimeType: "application/json", }
             };
 
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const report = generateMockReport(resumeText);
-                    resolve(report);
-                }, 1500); // Simulate network delay
-            });
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    console.error("API Error Response:", errorBody);
+                    // Provide a user-friendly error message based on the status code
+                    if (response.status === 403) {
+                         throw new Error("Could not authenticate with the analysis service. Please check the API key.");
+                    }
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (jsonText) {
+                    return JSON.parse(jsonText);
+                } else {
+                    throw new Error("Invalid response structure from API.");
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                 // Fallback to an error state to be shown to the user
+                return {
+                    overallScore: 0,
+                    overallSummary: `Analysis failed: ${error.message}. Please try again later.`,
+                    sections: []
+                };
+            }
         };
 
 
