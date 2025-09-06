@@ -139,28 +139,17 @@
 
         // --- GEMINI API HELPER ---
         const callGeminiAPI = async (prompt, jsonResponse = false) => {
-            const apiKey = ""; // Left empty for the environment to provide
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const url = `/.netlify/functions/call-gemini`;
             
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-            };
-
-            if (jsonResponse) {
-                payload.generationConfig = {
-                    responseMimeType: "application/json",
-                }
-            }
-
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({ prompt, jsonResponse }),
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API call failed with status: ${response.status}`);
+                    throw new Error(`Netlify function failed with status: ${response.status}`);
                 }
 
                 const result = await response.json();
@@ -173,11 +162,10 @@
                 return jsonResponse ? JSON.parse(text) : text;
 
             } catch (error) {
-                console.error("Gemini API call error:", error);
+                console.error("API call error:", error);
                 return null;
             }
         };
-
 
         // --- ASSETS & ICONS ---
         const Logo = () => (
@@ -201,24 +189,33 @@
             </svg>
         );
 
-        const AchievementIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-[#00C853]" viewBox="0 0 64 64" fill="none">
-                {/* Sparkles */}
-                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M14 20L16 18" />
-                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M50 20L48 18" />
-                <path stroke="#64ffda" strokeWidth="1.5" strokeLinecap="round" d="M54 32L56 32" />
-                <path stroke="#64ffda" strokeWidth="1.5" strokeLinecap="round" d="M10 32L8 32" />
-                <path stroke="#64ffda" strokeWidth="2" strokeLinecap="round" d="M32 12V8" />
+        const LightbulbIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" viewBox="0 0 64 64" fill="none">
+                <g strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Light Rays */}
+                    <g stroke="#FFFF00" strokeOpacity="0.8">
+                        <path d="M32 6V10" />
+                        <path d="M22.5 14.5L25 17" />
+                        <path d="M15 26H19" />
+                        <path d="M41.5 14.5L39 17" />
+                        <path d="M49 26H45" />
+                    </g>
 
-                {/* Abstract Person Figure */}
-                <circle cx="32" cy="22" r="6" stroke="currentColor" strokeWidth="2"/>
-                <path d="M22 44C22 37.3726 26.4772 32 32 32C37.5228 32 42 37.3726 42 44" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                
-                {/* Podium/Trophy base */}
-                <path d="M16 54H48" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M20 44H44" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M20 44V54" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M44 44V54" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    {/* Bulb Glass and Glow */}
+                    <path d="M32 44C39.73 44 46 37.73 46 30C46 22.27 39.73 16 32 16C24.27 16 18 22.27 18 30C18 34.05 20.08 37.67 23 40.1" stroke="#00C853"/>
+                    <path d="M32 44C39.73 44 46 37.73 46 30C46 22.27 39.73 16 32 16C24.27 16 18 22.27 18 30C18 34.05 20.08 37.67 23 40.1" fill="#FFFF00" fillOpacity="0.2"/>
+
+                    {/* Filament */}
+                    <path d="M28 30L36 34" stroke="#FFFF00" strokeWidth="2"/>
+                    <path d="M36 30L28 34" stroke="#FFFF00" strokeWidth="2"/>
+
+                    {/* Base */}
+                    <g stroke="#9ca3af">
+                       <path d="M25 44H39" />
+                       <path d="M26 48H38" />
+                       <path d="M28 52H36" />
+                    </g>
+                </g>
             </svg>
         );
         
@@ -266,7 +263,7 @@
                 { id: 'home', label: 'Home' },
                 { id: 'courses', label: 'Courses' },
                 { id: 'resume', label: 'Resume AI' },
-                { id: 'freelance', label: 'Find Work' },
+                { id: 'freelance', label: 'Find Internships' },
             ];
             
             const handleNavClick = (pageId) => {
@@ -337,7 +334,7 @@
                             <ul className="space-y-2 text-gray-400 text-sm">
                                 <li><a href="#" className="hover:text-[#00C853]">Courses</a></li>
                                 <li><a href="#" className="hover:text-[#00C853]">Resume AI</a></li>
-                                <li><a href="#" className="hover:text-[#00C853]">Find Work</a></li>
+                                <li><a href="#" className="hover:text-[#00C853]">Find Internships</a></li>
                             </ul>
                         </div>
                         <div>
@@ -458,7 +455,7 @@
                         <div className="container mx-auto px-4 sm:px-6">
                             <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
                                 <div className="max-w-md mx-auto order-last md:order-first">
-                                   <AchievementIcon />
+                                   <LightbulbIcon />
                                 </div>
                                 <div>
                                     <h2 className="text-3xl sm:text-4xl font-bold text-white">Supercharge Your Career with <span className="text-[#00C853]">AI</span></h2>
@@ -509,7 +506,7 @@
                                 <Card><div className="p-8"><h3 className="text-xl font-bold mb-2 text-white">AI Career Tools</h3><p className="text-gray-400 text-sm">Optimize your resume and LinkedIn profile to stand out.</p></div></Card>
                                 <Card><div className="p-8"><h3 className="text-xl font-bold mb-2 text-white">Expert-Led Courses</h3><p className="text-gray-400 text-sm">Learn in-demand skills from industry professionals.</p></div></Card>
                                 <Card><div className="p-8"><h3 className="text-xl font-bold mb-2 text-white">Mock Interviews</h3><p className="text-gray-400 text-sm">Practice with AI and human experts to ace any interview.</p></div></Card>
-                                <Card><div className="p-8"><h3 className="text-xl font-bold mb-2 text-white">Freelance Gigs</h3><p className="text-gray-400 text-sm">Apply for part-time work to build real experience.</p></div></Card>
+                                <Card><div className="p-8"><h3 className="text-xl font-bold mb-2 text-white">Internships & Gigs</h3><p className="text-gray-400 text-sm">Apply for internships and part-time work to build real experience.</p></div></Card>
                             </div>
                         </div>
                     </section>
@@ -675,74 +672,6 @@
             );
         };
 
-        const CoursesPageThemed = () => {
-            const { showNotification } = useAppContext();
-            const [selectedCourse, setSelectedCourse] = React.useState(null);
-            const [chatHistory, setChatHistory] = React.useState([]);
-            const [userMessage, setUserMessage] = React.useState('');
-            const [isAiLoading, setIsAiLoading] = React.useState(false);
-
-            const handleAskAi = async (e) => {
-                e.preventDefault();
-                if (!userMessage.trim()) return;
-
-                const newUserMessage = { role: 'user', text: userMessage };
-                setChatHistory(prev => [...prev, newUserMessage]);
-                setUserMessage('');
-                setIsAiLoading(true);
-
-                const prompt = `You are a friendly tutor for the course "${selectedCourse.title}". A student asked: "${userMessage}". Provide a helpful and concise answer.`;
-                const aiResponse = await callGeminiAPI(prompt);
-
-                if (aiResponse) {
-                    setChatHistory(prev => [...prev, { role: 'ai', text: aiResponse }]);
-                } else {
-                    setChatHistory(prev => [...prev, { role: 'ai', text: 'Sorry, I couldn\'t fetch an answer. Please try again.' }]);
-                }
-                setIsAiLoading(false);
-            };
-
-            return (
-                <div className="container mx-auto px-4 sm:px-6 py-16 md:py-20 animate-fade-in">
-                    <div className="max-w-3xl mx-auto text-center">
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">Our Courses</h1>
-                        <p className="mt-4 text-gray-400">Invest in yourself. Learn from the best in the industry.</p>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 md:mt-16">
-                        {MOCK_COURSES.map(course => (
-                            <Card key={course.id} className="flex flex-col">
-                                <div className="p-6 flex-grow">
-                                    <p className="text-sm font-semibold text-[#00C853]">{course.level}</p>
-                                    <h3 className="text-2xl font-bold mt-2 text-white">{course.title}</h3>
-                                    <p className="text-gray-400 mt-2">{course.description}</p>
-                                </div>
-                                <div className="p-6 bg-gray-950/70 border-t border-gray-800 space-y-3">
-                                    <button onClick={() => showNotification(`Enrolled in ${course.title}!`)} className="w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400">Enroll for ₹{course.price}</button>
-                                    <button onClick={() => { setSelectedCourse(course); setChatHistory([])}} className="w-full py-2 font-semibold text-[#00C853] bg-green-500/10 rounded-lg hover:bg-green-500/20">Ask AI Assistant</button>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                    {selectedCourse && (
-                        <Modal title={`AI Assistant: ${selectedCourse.title}`} onClose={() => setSelectedCourse(null)}>
-                           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                               {chatHistory.map((msg, i) => (
-                                   <div key={i} className={`p-3 rounded-lg ${msg.role === 'user' ? 'bg-gray-800 text-right' : 'bg-gray-700'}`}>
-                                       <p className="text-sm text-gray-300 whitespace-pre-wrap">{msg.text}</p>
-                                   </div>
-                               ))}
-                               {isAiLoading && <p className="text-center text-gray-400">AI is typing...</p>}
-                           </div>
-                           <form onSubmit={handleAskAi} className="mt-4 flex gap-2">
-                               <input value={userMessage} onChange={e => setUserMessage(e.target.value)} type="text" placeholder="Ask a question..." className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-[#00C853] focus:outline-none" />
-                               <button type="submit" className="px-4 py-2 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400">Send</button>
-                           </form>
-                        </Modal>
-                    )}
-                </div>
-            );
-        };
-
         const FreelancePageThemed = () => {
             const { showNotification } = useAppContext();
             const [selectedJob, setSelectedJob] = React.useState(null);
@@ -766,7 +695,7 @@
             return (
                 <div className="container mx-auto px-4 sm:px-6 py-16 md:py-20 animate-fade-in min-h-[70vh]">
                     <div className="max-w-3xl mx-auto text-center">
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">Find Freelance & Part-Time Work</h1>
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">Find Internships & Part-Time Work</h1>
                         <p className="mt-4 text-gray-400">Gain real-world experience and earn while you learn.</p>
                     </div>
                     <div className="space-y-6 max-w-4xl mx-auto mt-12 md:mt-16">
