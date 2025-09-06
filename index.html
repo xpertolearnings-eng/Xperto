@@ -69,7 +69,7 @@
         }
 
         .hero-grid-background {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(156 163 175 / 0.1)'%3E%3Cpath d='M0 .5H32V32'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32' width='32' height='32' fill='none' stroke='rgb(156 163 175 / 0.1)'%3E%3Cpath d='M0 .5H32V32'/%3E%3C/svg%3E");
         }
 
         /* Animation for rotating text - NEW ROBUST METHOD */
@@ -137,95 +137,116 @@
             { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
 
-        // --- MOCK API & DATA for RESUME ---
-        const MOCK_STRUCTURED_REPORT = {
-            overallScore: 68,
-            overallSummary: "A promising resume with good project work, but it needs to better articulate achievements in the Experience section and optimize skills for ATS.",
-            sections: [
-                {
-                    id: 'experience',
-                    title: 'Experience',
-                    score: 55, // Red
-                    findings: ["Your bullet points describe tasks, not achievements.", "Impact is not quantified with numbers or metrics."],
-                    quickTip: "Start each bullet point with a strong action verb (e.g., 'Developed', 'Engineered', 'Optimized') instead of 'Worked on'.",
-                    lockedContent: {
-                        detailedTips: ["For every task, ask yourself 'so what?' What was the result of your work?", "Use the X-Y-Z formula: 'Accomplished [X] as measured by [Y], by doing [Z].'"],
-                        examples: [
-                            {
-                                before: "Worked on the company's main website.",
-                                after: "Engineered 5+ reusable React components for the main e-commerce website, which were adopted by 3 other developers and reduced future development time by 15%."
-                            },
-                            {
-                                before: "Responsible for testing the application.",
-                                after: "Implemented unit and integration tests using Jest and React Testing Library, increasing test coverage from 40% to 85% and catching 10+ critical bugs before deployment."
-                            }
-                        ],
-                        explanation: "Companies hire for results, not just for effort. Quantifying your achievements proves your value and makes you a more compelling candidate."
-                    }
-                },
-                {
-                    id: 'summary',
-                    title: 'Summary',
-                    score: 75, // Yellow
-                    findings: ["The summary is a bit generic and doesn't highlight your key career goal.", "It lacks specific keywords for a software developer role."],
-                    quickTip: "Add a specific job title you're targeting, like 'Aspiring Frontend Developer', to the beginning of your summary.",
-                    lockedContent: {
-                        detailedTips: ["Tailor the summary to each job application.", "Mention 2-3 of your most impressive technical skills directly in the summary."],
-                        examples: [
-                            {
-                                before: "A motivated computer science student looking for an internship.",
-                                after: "Aspiring Frontend Developer with hands-on experience in React and Node.js, seeking to leverage skills in building responsive web applications in a challenging internship role."
-                            }
-                        ],
-                        explanation: "Recruiters spend only seconds on your resume. The summary is your elevator pitch; it must immediately tell them who you are and what you want."
-                    }
-                },
-                {
-                    id: 'projects',
-                    title: 'Projects',
-                    score: 82, // Yellow
-                    findings: ["Project descriptions are good, but could be more results-oriented.", "The tech stack is listed, but your specific role isn't always clear."],
-                    quickTip: "For each project, add a link to the live demo or GitHub repository to let recruiters see your work.",
-                    lockedContent: {
-                        detailedTips: ["Include a 'Key Achievements' sub-section for each project with 1-2 bullet points.", "Clearly state if it was a solo or team project. If team, describe your primary responsibilities."],
-                        examples: [
-                            {
-                                before: "E-commerce Website. Tech: MERN Stack.",
-                                after: "Full-Stack E-commerce Platform (Solo Project) | Live Demo | GitHub\n- Developed a complete MERN stack application with features like product search, cart, user authentication, and Stripe payment integration.\n- Key Achievement: Implemented a state management solution with Redux Toolkit that improved data consistency across the app."
-                            }
-                        ],
-                        explanation: "Projects are your proof of skill. A well-documented project with a live demo is far more convincing than just a description."
-                    }
-                },
-                {
-                    id: 'skills',
-                    title: 'Skills',
-                    score: 65, // Yellow
-                    findings: ["Skills are listed in one large block, making it hard to read.", "Lacks a mix of hard and soft skills."],
-                    quickTip: "Categorize your skills into sections like 'Programming Languages', 'Frameworks & Libraries', and 'Developer Tools'.",
-                    lockedContent: {
-                        detailedTips: ["Order skills by proficiency, listing your strongest ones first.", "Add 2-3 relevant soft skills like 'Team Collaboration', 'Problem Solving', or 'Agile Methodologies'."],
-                        examples: [
-                            {
-                                before: "JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git.",
-                                after: "Languages: JavaScript (ES6+), Python, HTML5, CSS3\nFrameworks: React.js, Node.js, Express.js\nDatabases: MongoDB, SQL\nTools: Git, Docker, Webpack, Jest"
-                            }
-                        ],
-                        explanation: "A well-organized skills section helps recruiters quickly assess if your technical abilities match the job requirements. It's also critical for passing ATS scans."
-                    }
-                },
-            ]
-        };
+        // --- [NEW] REAL GEMINI API CALL ---
+        const callGeminiAPI = async (resumeText) => {
+            const apiKey = ""; // Left blank as per instructions
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-        const callGeminiAPI = async (prompt) => {
-            console.log("Calling Mock API with prompt:", prompt);
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    if (prompt.includes("Analyze this resume text")) {
-                        resolve(MOCK_STRUCTURED_REPORT);
-                    } else { resolve(null); }
-                }, 1500);
-            });
+            const systemPrompt = `You are Xperto AI, an expert resume analyzer. Your analysis is based on the following modern resume guidelines:
+            1.  **ATS-Friendly**: Use standard fonts (Arial, Calibri), keep the resume to one page, and avoid graphics.
+            2.  **Quantify Achievements**: Bullet points must show impact with numbers (e.g., 'Increased revenue by 15%').
+            3.  **Action Verbs**: Start every bullet point with a strong action verb (e.g., 'Engineered', 'Managed', 'Developed').
+            4.  **Structure**: The resume should have clear sections: Experience, Education, Skills, Projects.
+            5.  **Skills Section**: Skills must be categorized (e.g., 'Languages', 'Frameworks', 'Tools').
+            You must provide a detailed, section-by-section breakdown. Your feedback must be specific, actionable, and based *only* on the provided resume text. Analyze each section and give it a score from 0-100.`;
+
+            const userPrompt = `Please analyze the following resume text based on the guidelines. Provide your output *only* in the following JSON format. Do not include any other text or markdown formatting.
+
+            Resume Text:
+            ---
+            ${resumeText}
+            ---
+
+            JSON Format Required:
+            {
+              "overallScore": <number>,
+              "overallSummary": "<string>",
+              "sections": [
+                {
+                  "id": "experience",
+                  "title": "Experience",
+                  "score": <number>,
+                  "findings": ["<string>", "<string>"],
+                  "quickTip": "<string>",
+                  "lockedContent": {
+                    "detailedTips": ["<string>", "<string>"],
+                    "examples": [{"before": "<string>", "after": "<string>"}],
+                    "explanation": "<string>"
+                  }
+                },
+                {
+                  "id": "skills",
+                  "title": "Skills",
+                  "score": <number>,
+                  "findings": ["<string>", "<string>"],
+                  "quickTip": "<string>",
+                  "lockedContent": {
+                    "detailedTips": ["<string>", "<string>"],
+                    "examples": [{"before": "<string>", "after": "<string>"}],
+                    "explanation": "<string>"
+                  }
+                },
+                {
+                  "id": "projects",
+                  "title": "Projects",
+                  "score": <number>,
+                  "findings": ["<string>", "<string>"],
+                  "quickTip": "<string>",
+                  "lockedContent": {
+                    "detailedTips": ["<string>", "<string>"],
+                    "examples": [{"before": "<string>", "after": "<string>"}],
+                    "explanation": "<string>"
+                  }
+                },
+                {
+                  "id": "education",
+                  "title": "Education",
+                  "score": <number>,
+                  "findings": ["<string>", "<string>"],
+                  "quickTip": "<string>",
+                  "lockedContent": {
+                    "detailedTips": ["<string>", "<string>"],
+                    "examples": [{"before": "<string>", "after": "<string>"}],
+                    "explanation": "<string>"
+                  }
+                }
+              ]
+            }`;
+
+            const payload = {
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ parts: [{ text: userPrompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    console.error("API Error Response:", await response.text());
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (jsonText) {
+                    return JSON.parse(jsonText);
+                } else {
+                    throw new Error("Invalid response structure from API.");
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                // Fallback to mock data on error to prevent UI crash
+                return {
+                    overallScore: 0,
+                    overallSummary: "We couldn't analyze your resume at the moment. Please try again later.",
+                    sections: []
+                };
+            }
         };
 
         // --- ASSETS & ICONS ---
@@ -253,7 +274,6 @@
         const LightbulbIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" viewBox="0 0 64 64" fill="none">
                 <g strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    {/* Light Rays */}
                     <g stroke="#FFFF00" strokeOpacity="0.8">
                         <path d="M32 6V10" />
                         <path d="M22.5 14.5L25 17" />
@@ -261,16 +281,10 @@
                         <path d="M41.5 14.5L39 17" />
                         <path d="M49 26H45" />
                     </g>
-
-                    {/* Bulb Glass and Glow */}
                     <path d="M32 44C39.73 44 46 37.73 46 30C46 22.27 39.73 16 32 16C24.27 16 18 22.27 18 30C18 34.05 20.08 37.67 23 40.1" stroke="#00C853"/>
                     <path d="M32 44C39.73 44 46 37.73 46 30C46 22.27 39.73 16 32 16C24.27 16 18 22.27 18 30C18 34.05 20.08 37.67 23 40.1" fill="#FFFF00" fillOpacity="0.2"/>
-
-                    {/* Filament */}
                     <path d="M28 30L36 34" stroke="#FFFF00" strokeWidth="2"/>
                     <path d="M36 30L28 34" stroke="#FFFF00" strokeWidth="2"/>
-
-                    {/* Base */}
                     <g stroke="#9ca3af">
                        <path d="M25 44H39" />
                        <path d="M26 48H38" />
@@ -682,16 +696,16 @@
                 }
                 setLoading(true);
                 setReport(null);
-                const result = await callGeminiAPI(`Analyze this resume text: "${resumeText}"`);
+                const result = await callGeminiAPI(resumeText);
                 setLoading(false);
 
-                if (result && result.sections) {
+                if (result && result.sections && result.sections.length > 0) {
                     const sortedSections = [...result.sections].sort((a, b) => a.score - b.score);
                     setReport({ ...result, sections: sortedSections });
                     setSelectedSectionId(sortedSections[0]?.id);
                     showNotification('Free analysis complete!', 'success');
                 } else {
-                    showNotification('Analysis failed. Please try again.', 'error');
+                    showNotification(result.overallSummary || 'Analysis failed. Please try again.', 'error');
                 }
             };
             
