@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xperto - Build Your Future</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React Libraries -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX Transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- PDF.js for Resume Parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;</script>
 
@@ -133,111 +137,94 @@
             { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
 
-        // --- GEMINI API HELPER ---
-        // NOTE: This is a MOCK API call. It returns a detailed, structured report after a short delay.
-        const MOCK_REPORT_DATA = {
-            overallScore: 78,
-            summary: "A strong technical resume for a developer, but lacks the specific, quantifiable results that make it stand out to top recruiters.",
-            analysis: [
+        // --- MOCK API & DATA for RESUME ---
+        const MOCK_STRUCTURED_REPORT = {
+            overallScore: 68,
+            overallSummary: "A promising resume with good project work, but it needs to better articulate achievements in the Experience section and optimize skills for ATS.",
+            sections: [
                 {
-                    id: "quantifyImpact",
-                    title: "Quantify Your Impact",
-                    score: 4,
-                    hint: "Your bullet points describe tasks, not results.",
-                    stats: { quantifiedBullets: 2, totalBullets: 9, percentage: 22 },
-                    freeContent: {
-                        headline: "Show, Don't Just Tell: Add Numbers to Your Achievements",
-                        findings: [
-                            "Your resume describes your duties but doesn't show the results of your work.",
-                            "Recruiters look for concrete data to understand your contributions."
-                        ],
-                        quickFix: {
-                            title: "Quick Solution (Free)",
-                            description: "Review your 'E-commerce Website' project. Find the bullet 'Integrated payment gateway' and add a specific outcome. For example, mention the types of payments enabled (e.g., Cards, UPI) or if it improved user checkout flow."
-                        }
-                    },
+                    id: 'experience',
+                    title: 'Experience',
+                    score: 55, // Red
+                    findings: ["Your bullet points describe tasks, not achievements.", "Impact is not quantified with numbers or metrics."],
+                    quickTip: "Start each bullet point with a strong action verb (e.g., 'Developed', 'Engineered', 'Optimized') instead of 'Worked on'.",
                     lockedContent: {
-                        detailedFindings: [
-                            "Bullet points like 'Developed REST APIs for user management' are vague. How many endpoints? What was the performance?",
-                            "The impact of your personal projects isn't clear without metrics. How many users did your app serve? By how much did you improve a process?"
-                        ],
-                        solutions: [
+                        detailedTips: ["For every task, ask yourself 'so what?' What was the result of your work?", "Use the X-Y-Z formula: 'Accomplished [X] as measured by [Y], by doing [Z].'"],
+                        examples: [
                             {
-                                before: "Assisted in developing the frontend of the main dashboard.",
-                                after: "Contributed to developing the main dashboard's frontend using React, resulting in a 15% improvement in page load times.",
-                                template: "[Action Verb] + [Project/Task] + [Result/Metric]."
+                                before: "Worked on the company's main website.",
+                                after: "Engineered 5+ reusable React components for the main e-commerce website, which were adopted by 3 other developers and reduced future development time by 15%."
                             },
                             {
-                                before: "Built a task management application.",
-                                after: "Engineered a full-stack task management application used by a team of 5, which increased productivity by an estimated 20% by centralizing tasks."
+                                before: "Responsible for testing the application.",
+                                after: "Implemented unit and integration tests using Jest and React Testing Library, increasing test coverage from 40% to 85% and catching 10+ critical bugs before deployment."
                             }
                         ],
-                        extraTips: "Even if you don't have exact numbers, you can estimate. Phrases like 'approximately', 'over', or 'reduced by nearly' are acceptable. Focus on scale, frequency, or impact."
+                        explanation: "Companies hire for results, not just for effort. Quantifying your achievements proves your value and makes you a more compelling candidate."
                     }
                 },
                 {
-                    id: "actionVerbs",
-                    title: "Use Stronger Action Verbs",
-                    score: 7,
-                    hint: "Start bullet points with powerful verbs to grab attention.",
-                    freeContent: null,
+                    id: 'summary',
+                    title: 'Summary',
+                    score: 75, // Yellow
+                    findings: ["The summary is a bit generic and doesn't highlight your key career goal.", "It lacks specific keywords for a software developer role."],
+                    quickTip: "Add a specific job title you're targeting, like 'Aspiring Frontend Developer', to the beginning of your summary.",
                     lockedContent: {
-                        detailedFindings: [
-                            "Using passive phrases like 'Responsible for' or 'Worked on' weakens your accomplishments.",
-                            "Varying your action verbs makes your resume more engaging and impressive."
-                        ],
-                        solutions: [
+                        detailedTips: ["Tailor the summary to each job application.", "Mention 2-3 of your most impressive technical skills directly in the summary."],
+                        examples: [
                             {
-                                before: "Worked on creating a database schema for the project.",
-                                after: "Designed and implemented a normalized SQL database schema for a multi-user application.",
-                            },
-                            {
-                                before: "Helped with debugging the application.",
-                                after: "Identified and resolved over 15 critical bugs, improving application stability by 30%.",
+                                before: "A motivated computer science student looking for an internship.",
+                                after: "Aspiring Frontend Developer with hands-on experience in React and Node.js, seeking to leverage skills in building responsive web applications in a challenging internship role."
                             }
                         ],
-                        extraTips: "Use a thesaurus to find stronger synonyms. Instead of 'Led', try 'Orchestrated', 'Chaired', or 'Directed'."
+                        explanation: "Recruiters spend only seconds on your resume. The summary is your elevator pitch; it must immediately tell them who you are and what you want."
                     }
                 },
                 {
-                    id: "atsKeywords",
-                    title: "ATS Keyword Optimization",
-                    score: 6,
-                    hint: "Missing keywords for 'Software Engineer Intern' roles.",
-                    freeContent: null,
+                    id: 'projects',
+                    title: 'Projects',
+                    score: 82, // Yellow
+                    findings: ["Project descriptions are good, but could be more results-oriented.", "The tech stack is listed, but your specific role isn't always clear."],
+                    quickTip: "For each project, add a link to the live demo or GitHub repository to let recruiters see your work.",
                     lockedContent: {
-                        detailedFindings: [
-                            "Your resume is missing common technical keywords like 'Agile', 'CI/CD', and 'Git' which are often scanned by Applicant Tracking Systems (ATS).",
-                            "Tailoring keywords to the job description you are applying for is crucial."
-                        ],
-                        solutions: [
+                        detailedTips: ["Include a 'Key Achievements' sub-section for each project with 1-2 bullet points.", "Clearly state if it was a solo or team project. If team, describe your primary responsibilities."],
+                        examples: [
                             {
-                                before: "Technical Skills: JavaScript, React, Node.js",
-                                after: "Technical Skills: JavaScript (ES6+), React (Hooks, Redux), Node.js (Express), Git, REST APIs, MongoDB, Agile Methodologies.",
-                            },
+                                before: "E-commerce Website. Tech: MERN Stack.",
+                                after: "Full-Stack E-commerce Platform (Solo Project) | Live Demo | GitHub\n- Developed a complete MERN stack application with features like product search, cart, user authentication, and Stripe payment integration.\n- Key Achievement: Implemented a state management solution with Redux Toolkit that improved data consistency across the app."
+                            }
                         ],
-                        extraTips: "Analyze 3-5 job descriptions for your target role. Identify common required skills and technologies and ensure they are present in your resume (if you have them)."
+                        explanation: "Projects are your proof of skill. A well-documented project with a live demo is far more convincing than just a description."
                     }
-                }
+                },
+                {
+                    id: 'skills',
+                    title: 'Skills',
+                    score: 65, // Yellow
+                    findings: ["Skills are listed in one large block, making it hard to read.", "Lacks a mix of hard and soft skills."],
+                    quickTip: "Categorize your skills into sections like 'Programming Languages', 'Frameworks & Libraries', and 'Developer Tools'.",
+                    lockedContent: {
+                        detailedTips: ["Order skills by proficiency, listing your strongest ones first.", "Add 2-3 relevant soft skills like 'Team Collaboration', 'Problem Solving', or 'Agile Methodologies'."],
+                        examples: [
+                            {
+                                before: "JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git.",
+                                after: "Languages: JavaScript (ES6+), Python, HTML5, CSS3\nFrameworks: React.js, Node.js, Express.js\nDatabases: MongoDB, SQL\nTools: Git, Docker, Webpack, Jest"
+                            }
+                        ],
+                        explanation: "A well-organized skills section helps recruiters quickly assess if your technical abilities match the job requirements. It's also critical for passing ATS scans."
+                    }
+                },
             ]
         };
 
-        const callGeminiAPI = async (prompt, jsonResponse = false) => {
-            // This is a mock function that simulates a real API call.
+        const callGeminiAPI = async (prompt) => {
             console.log("Calling Mock API with prompt:", prompt);
             return new Promise(resolve => {
                 setTimeout(() => {
                     if (prompt.includes("Analyze this resume text")) {
-                        resolve(MOCK_REPORT_DATA);
-                    } else if (prompt.includes("Generate a concise, professional cover letter")) {
-                        const title = prompt.match(/"(.*?)"/)[1];
-                        const company = prompt.match(/at (.*?)\./)[1];
-                        const coverLetterText = `Dear Hiring Manager at ${company},\n\nI am writing to express my enthusiastic interest in the ${title} position. With a strong foundation in modern web technologies and a passion for creating intuitive user experiences, I am confident that I possess the skills and drive necessary to contribute effectively to your team.\n\nMy recent projects have provided me with hands-on experience in [mention a relevant skill from the job description, e.g., React development and state management], and I am eager to apply this knowledge to real-world challenges. I am particularly drawn to ${company}'s innovative work in the tech space and would be thrilled to be a part of it.\n\nThank you for considering my application. I have attached my resume for your review and look forward to the possibility of discussing this exciting opportunity further.\n\nSincerely,\nA Motivated Student`;
-                        resolve(coverLetterText);
-                    } else {
-                        resolve(null);
-                    }
-                }, 1500); // Simulate network delay
+                        resolve(MOCK_STRUCTURED_REPORT);
+                    } else { resolve(null); }
+                }, 1500);
             });
         };
 
@@ -266,14 +253,29 @@
         const LightbulbIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" viewBox="0 0 64 64" fill="none">
                 <g strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Light Rays */}
                     <g stroke="#FFFF00" strokeOpacity="0.8">
-                        <path d="M32 6V10" /> <path d="M22.5 14.5L25 17" /> <path d="M15 26H19" />
-                        <path d="M41.5 14.5L39 17" /> <path d="M49 26H45" />
+                        <path d="M32 6V10" />
+                        <path d="M22.5 14.5L25 17" />
+                        <path d="M15 26H19" />
+                        <path d="M41.5 14.5L39 17" />
+                        <path d="M49 26H45" />
                     </g>
+
+                    {/* Bulb Glass and Glow */}
                     <path d="M32 44C39.73 44 46 37.73 46 30C46 22.27 39.73 16 32 16C24.27 16 18 22.27 18 30C18 34.05 20.08 37.67 23 40.1" stroke="#00C853"/>
                     <path d="M32 44C39.73 44 46 37.73 46 30C46 22.27 39.73 16 32 16C24.27 16 18 22.27 18 30C18 34.05 20.08 37.67 23 40.1" fill="#FFFF00" fillOpacity="0.2"/>
-                    <path d="M28 30L36 34" stroke="#FFFF00" strokeWidth="2"/> <path d="M36 30L28 34" stroke="#FFFF00" strokeWidth="2"/>
-                    <g stroke="#9ca3af"> <path d="M25 44H39" /> <path d="M26 48H38" /> <path d="M28 52H36" /> </g>
+
+                    {/* Filament */}
+                    <path d="M28 30L36 34" stroke="#FFFF00" strokeWidth="2"/>
+                    <path d="M36 30L28 34" stroke="#FFFF00" strokeWidth="2"/>
+
+                    {/* Base */}
+                    <g stroke="#9ca3af">
+                       <path d="M25 44H39" />
+                       <path d="M26 48H38" />
+                       <path d="M28 52H36" />
+                    </g>
                 </g>
             </svg>
         );
@@ -284,11 +286,9 @@
             </svg>
         );
 
-        const LockIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-        );
+        const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
+        const CheckIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>);
+
 
         // --- CONTEXT API for State Management ---
         const AppContext = React.createContext();
@@ -338,7 +338,9 @@
             return (
                 <header className="bg-black/50 backdrop-blur-md sticky top-0 z-40 border-b border-gray-800">
                     <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                        <div className="flex items-center cursor-pointer" onClick={() => handleNavClick('home')}> <Logo /> </div>
+                        <div className="flex items-center cursor-pointer" onClick={() => handleNavClick('home')}>
+                            <Logo />
+                        </div>
                         <div className="hidden md:flex items-center space-x-8">
                             {navItems.map(item => (
                                 <button key={item.id} onClick={() => handleNavClick(item.id)} className={`text-gray-300 hover:text-white transition-colors duration-300 relative group ${page === item.id ? 'font-semibold text-white' : ''}`}>
@@ -369,9 +371,13 @@
                         <div className="md:hidden animate-fade-in">
                             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                                 {navItems.map(item => (
-                                    <button key={item.id} onClick={() => handleNavClick(item.id)} className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${page === item.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>{item.label}</button>
+                                    <button key={item.id} onClick={() => handleNavClick(item.id)} className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${page === item.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>
+                                        {item.label}
+                                    </button>
                                 ))}
-                                {!user && <button onClick={() => handleNavClick('login')} className="sm:hidden block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Login</button>}
+                                {!user && (
+                                     <button onClick={() => handleNavClick('login')} className="sm:hidden block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Login</button>
+                                )}
                             </div>
                         </div>
                     )}
@@ -420,7 +426,9 @@
         const NotificationCenter = ({ notifications }) => (
             <div className="fixed bottom-5 right-5 z-50 space-y-3">
                 {notifications.map(n => (
-                    <div key={n.id} className={`px-4 py-3 rounded-lg shadow-lg text-white font-semibold animate-slide-in-up ${n.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>{n.message}</div>
+                    <div key={n.id} className={`px-4 py-3 rounded-lg shadow-lg text-white font-semibold animate-slide-in-up ${n.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                        {n.message}
+                    </div>
                 ))}
             </div>
         );
@@ -469,17 +477,27 @@
                                  <div className="flex justify-center items-baseline flex-wrap">
                                     <span>Xperto,</span>
                                     <span className="word-container mx-2 text-[#00C853]">
-                                        <span className="word-sizer">Placements</span>
-                                        <span className="rotating-word" key={key}>{rotatingWords[currentIndex]}</span>
+                                        <span className="word-sizer">Placements</span> {/* Invisible sizer */}
+                                        <span className="rotating-word" key={key}>
+                                            {rotatingWords[currentIndex]}
+                                        </span>
                                     </span>
                                     <span>Simplified!</span>
                                 </div>
-                                <div> Build Your <span className="text-[#00C853]">Future</span> Now. </div>
+                                <div>
+                                    Build Your <span className="text-[#00C853]">Future</span> Now.
+                                </div>
                             </h1>
-                            <p className="mt-6 text-base md:text-lg text-gray-400 max-w-2xl mx-auto"> Xperto is the ultimate platform for students to learn in-demand skills, optimize their career tools, and connect with real-world opportunities. </p>
+                            <p className="mt-6 text-base md:text-lg text-gray-400 max-w-2xl mx-auto">
+                                Xperto is the ultimate platform for students to learn in-demand skills, optimize their career tools, and connect with real-world opportunities.
+                            </p>
                             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <button onClick={() => setPage('courses')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transform hover:scale-105 transition-all duration-300"> Explore Courses </button>
-                                <button onClick={() => setPage('resume')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-sm hover:bg-gray-700 hover:border-gray-600 transform hover:scale-105 transition-all duration-300"> Optimize My Resume </button>
+                                <button onClick={() => setPage('courses')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transform hover:scale-105 transition-all duration-300">
+                                    Explore Courses
+                                </button>
+                                <button onClick={() => setPage('resume')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-sm hover:bg-gray-700 hover:border-gray-600 transform hover:scale-105 transition-all duration-300">
+                                    Optimize My Resume
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -488,7 +506,11 @@
                             <h3 className="text-center text-base md:text-lg font-medium text-gray-500 mb-8">Trusted by talent acquisition teams at top Indian startups</h3>
                             <div className="relative overflow-hidden group -mx-4">
                                 <div className="animate-marquee group-hover:[animation-play-state:paused] whitespace-nowrap">
-                                    {[...partnerLogos, ...partnerLogos].map((p, i) => ( <div key={i} className="inline-flex items-center justify-center align-middle w-28 mx-2 sm:w-36 sm:mx-3 md:w-48 md:mx-4 opacity-80 hover:opacity-100 transition-opacity duration-300">{p.logo}</div> ))}
+                                    {[...partnerLogos, ...partnerLogos].map((p, i) => (
+                                        <div key={i} className="inline-flex items-center justify-center align-middle w-28 mx-2 sm:w-36 sm:mx-3 md:w-48 md:mx-4 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                                            {p.logo}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -496,7 +518,9 @@
                     <section className="py-20 md:py-24 bg-black">
                         <div className="container mx-auto px-4 sm:px-6">
                             <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-                                <div className="max-w-md mx-auto order-last md:order-first"> <LightbulbIcon /> </div>
+                                <div className="max-w-md mx-auto order-last md:order-first">
+                                   <LightbulbIcon />
+                                </div>
                                 <div>
                                     <h2 className="text-3xl sm:text-4xl font-bold text-white">Supercharge Your Career with <span className="text-[#00C853]">AI</span></h2>
                                     <p className="mt-4 text-gray-400">Our AI-powered tool analyzes your Resume and LinkedIn profile against millions of data points to give you a competitive edge.</p>
@@ -505,7 +529,9 @@
                                         <li className="flex items-start"><CheckCircleIcon /><div><span className="font-semibold text-gray-200">Keyword Analysis:</span> <span className="text-gray-400">We identify and suggest keywords tailored to your target job roles.</span></div></li>
                                         <li className="flex items-start"><CheckCircleIcon /><div><span className="font-semibold text-gray-200">Impactful Metrics:</span> <span className="text-gray-400">Learn how to quantify your achievements to demonstrate your value.</span></div></li>
                                     </ul>
-                                    <button onClick={() => setPage('resume')} className="mt-8 px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transition-all duration-300"> Get Your Free Analysis </button>
+                                    <button onClick={() => setPage('resume')} className="mt-8 px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transition-all duration-300">
+                                        Get Your Free Analysis
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -525,7 +551,9 @@
                                             <p className="text-gray-400 mt-2 text-sm">{course.description}</p>
                                         </div>
                                         <div className="p-6 border-t border-gray-800">
-                                            <button onClick={() => setPage('courses')} className="w-full py-2 font-semibold text-[#00C853] bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors">Learn More</button>
+                                            <button onClick={() => setPage('courses')} className="w-full py-2 font-semibold text-[#00C853] bg-green-500/10 rounded-lg hover:bg-green-500/20 transition-colors">
+                                                Learn More
+                                            </button>
                                         </div>
                                     </Card>
                                 ))}
@@ -590,14 +618,16 @@
                         <div className="container mx-auto px-4 sm:px-6 text-center">
                             <h2 className="text-3xl sm:text-4xl font-bold text-white">Ready to Elevate Your Career?</h2>
                             <p className="text-gray-400 mt-4 max-w-xl mx-auto">Join thousands of students on their journey to success. Your next big opportunity is just a click away.</p>
-                            <button onClick={() => setPage('login')} className="mt-8 px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-lg shadow-green-500/20 hover:bg-green-400 transform hover:scale-105 transition-all duration-300"> Sign Up for Free </button>
+                            <button onClick={() => setPage('login')} className="mt-8 px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-lg shadow-green-500/20 hover:bg-green-400 transform hover:scale-105 transition-all duration-300">
+                                Sign Up for Free
+                            </button>
                         </div>
                     </section>
                 </div>
             );
         };
         
-        // --- [START] MODIFIED RESUME OPTIMIZER PAGE ---
+        // --- [START] REBUILT RESUME OPTIMIZER PAGE ---
         const ResumeOptimizerPageThemed = () => {
             const { showNotification } = useAppContext();
             const [file, setFile] = React.useState(null);
@@ -605,9 +635,15 @@
             const [report, setReport] = React.useState(null);
             const [isReportUnlocked, setIsReportUnlocked] = React.useState(false);
             const [loading, setLoading] = React.useState(false);
-            const [selectedFixId, setSelectedFixId] = React.useState(null);
+            const [selectedSectionId, setSelectedSectionId] = React.useState(null);
 
-            const activeFix = report ? report.analysis.find(fix => fix.id === selectedFixId) : null;
+            const activeSection = report ? report.sections.find(s => s.id === selectedSectionId) : null;
+
+            const getScoreColorClasses = (score) => {
+                if (score <= 60) return { text: 'text-red-400', bg: 'bg-red-900/50' };
+                if (score <= 90) return { text: 'text-yellow-400', bg: 'bg-yellow-900/50' };
+                return { text: 'text-green-400', bg: 'bg-green-900/50' };
+            };
 
             const handleFileChange = async (e) => {
                 const uploadedFile = e.target.files[0];
@@ -616,7 +652,7 @@
                 setFile(uploadedFile);
                 setReport(null);
                 setIsReportUnlocked(false);
-                setSelectedFixId(null);
+                setSelectedSectionId(null);
 
                 const reader = new FileReader();
                 reader.onload = async (event) => {
@@ -646,35 +682,45 @@
                 }
                 setLoading(true);
                 setReport(null);
-                const prompt = `Analyze this resume text and generate a structured report. Resume: "${resumeText}"`;
-                const result = await callGeminiAPI(prompt, true);
-                if (result && result.analysis) {
-                    setReport(result);
-                    setSelectedFixId(result.analysis[0]?.id); // Select the first fix by default
+                const result = await callGeminiAPI(`Analyze this resume text: "${resumeText}"`);
+                setLoading(false);
+
+                if (result && result.sections) {
+                    const sortedSections = [...result.sections].sort((a, b) => a.score - b.score);
+                    setReport({ ...result, sections: sortedSections });
+                    setSelectedSectionId(sortedSections[0]?.id);
                     showNotification('Free analysis complete!', 'success');
                 } else {
                     showNotification('Analysis failed. Please try again.', 'error');
                 }
-                setLoading(false);
-            };
-
-            const handleUnlock = () => {
-                setIsReportUnlocked(true);
-                showNotification('Full report unlocked!', 'success');
             };
             
-            const ScoreBadge = ({ score }) => {
-                const bgColor = score < 5 ? 'bg-red-500/20 text-red-400' : score < 8 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400';
-                return <span className={`ml-auto text-xs font-bold px-2.5 py-1 rounded-full ${bgColor}`}>{score}/10</span>;
+            const ScoreCircle = ({ score }) => {
+                const { text } = getScoreColorClasses(score);
+                return (
+                    <div className={`flex items-center justify-center rounded-full bg-gray-800 font-bold w-10 h-10 text-lg ${text}`}>
+                        {score}
+                    </div>
+                );
             };
 
-            const LockedContent = ({ children, onUnlock }) => (
-                <div className="mt-6 relative">
-                    <div className="blur-md pointer-events-none">{children}</div>
-                    <div className="absolute inset-0 bg-gray-900/70 flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-700">
-                        <h3 className="text-xl font-bold text-white text-center px-4">Unlock the Full Report for Detailed Solutions</h3>
-                        <p className="text-gray-400 text-sm mt-1">Get before/after examples, templates, and expert tips.</p>
-                        <button onClick={onUnlock} className="mt-4 px-6 py-2 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 transition-colors flex items-center">
+            const LockedContent = ({ onUnlock }) => (
+                 <div className="mt-8 relative">
+                    <div className="blur-sm pointer-events-none space-y-6 opacity-60">
+                         <div>
+                            <h3 className="text-lg font-semibold text-gray-200">Detailed Improvements</h3>
+                            <p className="mt-2 text-sm text-gray-400 bg-gray-800/50 p-3 rounded-md">Unlock to see specific advice tailored to your resume section.</p>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-200">Rewritten Examples</h3>
+                             <div className="mt-2 p-4 border border-gray-700 rounded-lg">
+                                <p className="text-xs text-red-500">Before: Example of a weak entry...</p>
+                                <p className="text-xs text-green-500 mt-1">After: A strong, rewritten example...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="absolute inset-0 bg-gray-900/80 flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-700 p-4">
+                        <button onClick={onUnlock} className="px-6 py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 transition-colors flex items-center shadow-lg shadow-green-500/20">
                             <LockIcon /> Unlock Full Report for ₹49
                         </button>
                     </div>
@@ -682,141 +728,111 @@
             );
 
             return (
-                <div className="container mx-auto px-4 sm:px-6 py-16 md:py-20 animate-fade-in min-h-[70vh]">
-                    {/* --- UPLOAD SECTION --- */}
+                <div className="container mx-auto px-4 sm:px-6 py-16 md:py-20 animate-fade-in min-h-screen">
                     {!report && (
                         <>
                             <div className="max-w-3xl mx-auto text-center">
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">AI Resume Optimizer</h1>
-                                <p className="mt-4 text-gray-400">Upload your Resume (PDF) to get a free, instant analysis from our advanced AI.</p>
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">AI Resume Grader</h1>
+                                <p className="mt-4 text-gray-400">Get an instant, section-by-section analysis of your resume to identify weaknesses and outshine the competition.</p>
                             </div>
                             <div className="max-w-2xl mx-auto mt-12">
-                                <Card className="p-6 sm:p-8">
+                                <Card className="p-6 sm:p-8 hover:border-[#00C853]/50 transition-colors">
                                     <input type="file" accept=".pdf" onChange={handleFileChange} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-gray-300 hover:file:bg-gray-700"/>
                                     {file && <p className="mt-4 text-sm text-gray-500">Selected: {file.name}</p>}
                                     <button onClick={handleAnalyze} disabled={loading || !file} className="mt-6 w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed">
-                                        {loading ? 'Analyzing...' : 'Get Free Analysis'}
+                                        {loading ? 'Analyzing...' : 'Grade My Resume'}
                                     </button>
                                 </Card>
                             </div>
                         </>
                     )}
                     
-                    {/* --- REPORT SECTION --- */}
                     {report && (
-                        <div className="bg-gray-900/50 rounded-2xl border border-gray-800 p-4 sm:p-6 lg:p-8 animate-slide-in-up">
-                            <div className="grid lg:grid-cols-3 gap-8">
-                                {/* --- SIDEBAR (Left) --- */}
-                                <aside className="lg:col-span-1">
-                                    <h2 className="text-2xl font-bold text-white">Your Analysis</h2>
-                                    <div className="mt-4 p-4 rounded-xl bg-gray-800/50">
-                                        <p className="text-gray-400 text-sm font-medium">Overall Score</p>
-                                        <p className="text-6xl font-bold text-[#00C853]">{report.overallScore}<span className="text-3xl text-gray-500">/100</span></p>
-                                        <p className="mt-2 text-sm text-gray-400">{report.summary}</p>
+                        <div className="grid lg:grid-cols-12 gap-8 animate-slide-in-up">
+                            <aside className="lg:col-span-4 xl:col-span-3">
+                                <div className="p-4 rounded-xl bg-gray-900 border border-gray-800 sticky top-24">
+                                    <h2 className="text-lg font-bold text-white mb-3">Overall Score</h2>
+                                    <div className={`p-4 rounded-lg text-center ${getScoreColorClasses(report.overallScore).bg}`}>
+                                        <p className={`text-6xl font-bold ${getScoreColorClasses(report.overallScore).text}`}>{report.overallScore}<span className="text-3xl text-gray-500">/100</span></p>
                                     </div>
-                                    <div className="mt-6">
-                                        <h3 className="font-semibold text-gray-200">Top Fixes</h3>
-                                        <div className="mt-3 space-y-2">
-                                            {report.analysis.map(fix => (
-                                                <button key={fix.id} onClick={() => setSelectedFixId(fix.id)}
-                                                    className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 ${selectedFixId === fix.id ? 'bg-gray-800' : 'hover:bg-gray-800/50'}`}>
-                                                    <div>
-                                                        <p className="font-semibold text-gray-100">{fix.title}</p>
-                                                        <p className="text-xs text-gray-400">{fix.hint}</p>
-                                                    </div>
-                                                    <ScoreBadge score={fix.score} />
-                                                </button>
-                                            ))}
-                                        </div>
+                                    <p className="mt-3 text-sm text-gray-400">{report.overallSummary}</p>
+                                    
+                                    <h3 className="font-semibold text-gray-200 mt-6 mb-3">Section Breakdown</h3>
+                                    <div className="space-y-2">
+                                        {report.sections.map(section => (
+                                            <button key={section.id} onClick={() => setSelectedSectionId(section.id)}
+                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${selectedSectionId === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
+                                                <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
+                                                <ScoreCircle score={section.score} />
+                                            </button>
+                                        ))}
                                     </div>
-                                </aside>
+                                </div>
+                            </aside>
 
-                                {/* --- MAIN CONTENT (Right) --- */}
-                                {activeFix && (
-                                    <main className="lg:col-span-2">
-                                        {activeFix.freeContent ? (
-                                            <>
-                                                <h2 className="text-2xl font-bold text-white">{activeFix.freeContent.headline}</h2>
-                                                <div className="mt-4 space-y-2">
-                                                    {activeFix.freeContent.findings.map((finding, i) => (
-                                                        <p key={i} className="text-gray-300">{finding}</p>
-                                                    ))}
-                                                </div>
-                                                {activeFix.stats && (
-                                                    <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
-                                                        <p className="text-sm font-medium text-gray-200">Quantification Check</p>
-                                                        <p className="text-gray-400"><span className="font-bold text-lg text-green-400">{activeFix.stats.quantifiedBullets} of {activeFix.stats.totalBullets}</span> bullets contain numbers ({activeFix.stats.percentage}%).</p>
-                                                    </div>
-                                                )}
-                                                <div className="mt-6 p-4 border border-green-500/30 bg-green-500/10 rounded-lg">
-                                                    <h4 className="font-bold text-green-300">{activeFix.freeContent.quickFix.title}</h4>
-                                                    <p className="text-sm text-gray-300 mt-1">{activeFix.freeContent.quickFix.description}</p>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="p-6 bg-gray-800/50 rounded-lg text-center">
-                                                <h2 className="text-2xl font-bold text-white">{activeFix.title}</h2>
-                                                <p className="text-gray-400 mt-2">Unlock the full report to see detailed findings and solutions for this section.</p>
-                                            </div>
-                                        )}
-                                        
-                                        {/* --- LOCKED/UNLOCKED CONTENT --- */}
-                                        <div className="mt-8">
-                                            {isReportUnlocked ? (
-                                                <div className="space-y-6">
-                                                    <div>
-                                                        <h3 className="text-lg font-semibold text-green-400 border-b border-gray-700 pb-2">Detailed Findings</h3>
-                                                        <ul className="mt-3 list-disc list-inside text-gray-300 space-y-2">
-                                                            {activeFix.lockedContent.detailedFindings.map((f, i) => <li key={i}>{f}</li>)}
-                                                        </ul>
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-lg font-semibold text-green-400 border-b border-gray-700 pb-2">Full Solutions</h3>
-                                                        {activeFix.lockedContent.solutions.map((s, i) => (
-                                                            <div key={i} className="mt-4 p-4 border border-gray-700 rounded-lg">
-                                                                <p className="text-sm text-red-400 line-through">Before: {s.before}</p>
-                                                                <p className="text-sm text-green-400 mt-1">After: {s.after}</p>
-                                                                {s.template && <p className="mt-2 text-xs text-gray-500 bg-gray-800 p-2 rounded">Template: {s.template}</p>}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {activeFix.lockedContent.extraTips && (
-                                                        <div>
-                                                            <h3 className="text-lg font-semibold text-green-400 border-b border-gray-700 pb-2">Extra Tips</h3>
-                                                            <p className="mt-3 text-gray-300">{activeFix.lockedContent.extraTips}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <LockedContent onUnlock={handleUnlock}>
-                                                    {/* This is the blurred content */}
-                                                     <div className="space-y-6 opacity-50">
-                                                        <div>
-                                                            <h3 className="text-lg font-semibold text-gray-200">Detailed Findings</h3>
-                                                            <ul className="mt-2 list-disc list-inside text-gray-400 space-y-1">
-                                                                {activeFix.lockedContent.detailedFindings.map((f, i) => <li key={i}>{f}</li>)}
-                                                            </ul>
-                                                        </div>
-                                                        <div>
-                                                           <h3 className="text-lg font-semibold text-gray-200">Full Solutions</h3>
-                                                            <div className="mt-2 p-3 border border-gray-700 rounded-lg">
-                                                                <p className="text-sm text-gray-500">Before: {activeFix.lockedContent.solutions[0].before}</p>
-                                                                <p className="text-sm text-gray-400">After: {activeFix.lockedContent.solutions[0].after}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </LockedContent>
-                                            )}
+                            {activeSection && (
+                                <main className="lg:col-span-8 xl:col-span-9">
+                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8">
+                                        <div className={`p-4 rounded-lg flex items-center ${getScoreColorClasses(activeSection.score).bg}`}>
+                                            <h2 className={`flex-grow text-2xl font-bold ${getScoreColorClasses(activeSection.score).text}`}>{activeSection.title} Section</h2>
+                                            <ScoreCircle score={activeSection.score} />
                                         </div>
-                                    </main>
-                                )}
-                            </div>
+                                        
+                                        <div className="mt-6 border-b border-gray-700 pb-6">
+                                            <h3 className="text-lg font-semibold text-white">Key Findings</h3>
+                                            <ul className="mt-3 space-y-2">
+                                                {activeSection.findings.map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                            </ul>
+                                        </div>
+
+                                        <div className="mt-6">
+                                            <h3 className="text-lg font-semibold text-white">Quick Tip</h3>
+                                            <p className="mt-2 text-sm text-gray-300 bg-green-900/50 p-4 rounded-lg border border-green-500/30">{activeSection.quickTip}</p>
+                                        </div>
+                                        
+                                        {isReportUnlocked ? (
+                                            <div className="mt-8 space-y-8 animate-fade-in">
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-green-400">Detailed Improvements</h3>
+                                                    <ul className="mt-3 list-disc list-inside text-gray-300 space-y-2">
+                                                        {activeSection.lockedContent.detailedTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                                                    </ul>
+                                                </div>
+                                                 <div>
+                                                    <h3 className="text-xl font-bold text-green-400">Rewritten Examples</h3>
+                                                    <div className="mt-3 space-y-4">
+                                                    {activeSection.lockedContent.examples.map((ex, i) => (
+                                                        <div key={i} className="p-4 border border-gray-700 rounded-lg">
+                                                            <p className="text-sm font-semibold text-red-400">Before:</p>
+                                                            <p className="text-sm text-gray-400 italic pl-4 border-l-2 border-red-500/50 ml-2 py-1">"{ex.before}"</p>
+                                                            <p className="text-sm font-semibold text-green-400 mt-3">After:</p>
+                                                            <p className="text-sm text-gray-200 pl-4 border-l-2 border-green-500/50 ml-2 py-1 whitespace-pre-wrap">{ex.after}</p>
+                                                        </div>
+                                                    ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-green-400">Why It Matters</h3>
+                                                    <p className="mt-2 text-gray-300">{activeSection.lockedContent.explanation}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                                        )}
+                                    </div>
+                                </main>
+                            )}
                         </div>
                     )}
                 </div>
             );
         };
-        // --- [END] MODIFIED RESUME OPTIMIZER PAGE ---
+        // --- [END] REBUILT RESUME OPTIMIZER PAGE ---
+
+        const CoursesPageThemed = () => {
+            // Placeholder for Courses Page
+            return <div className="text-center py-20 text-white">Courses Page</div>;
+        };
 
         const FreelancePageThemed = () => {
             const { showNotification } = useAppContext();
@@ -828,14 +844,11 @@
                 setSelectedJob(job);
                 setCoverLetter('');
                 setIsAiLoading(true);
-                const prompt = `Generate a concise, professional cover letter for a student applying for the "${job.title}" position at ${job.company}.`;
-                const result = await callGeminiAPI(prompt);
-                if (result) {
-                    setCoverLetter(result);
-                } else {
-                    setCoverLetter('Failed to generate cover letter. Please try again.');
-                }
-                setIsAiLoading(false);
+                // Simple mock cover letter generation
+                setTimeout(() => {
+                    setCoverLetter(`Dear Hiring Manager at ${job.company},\n\nI am writing to express my interest in the ${job.title} position...`);
+                    setIsAiLoading(false);
+                }, 1000);
             };
 
             return (
@@ -939,9 +952,7 @@
             const renderPage = () => {
                 switch (page) {
                     case 'home': return <HomePage />;
-                    // The 'courses' page was not defined, so I've added a placeholder. 
-                    // You can create a 'CoursesPageThemed' component if needed.
-                    case 'courses': return <div className="text-center py-20">Courses Page Coming Soon!</div>;
+                    case 'courses': return <CoursesPageThemed />;
                     case 'resume': return <ResumeOptimizerPageThemed />;
                     case 'freelance': return <FreelancePageThemed />;
                     case 'login': return <LoginPageThemed />;
@@ -973,3 +984,4 @@
     </script>
 </body>
 </html>
+
