@@ -38,7 +38,7 @@
             left: -100px; /* Initially hide off-screen */
         }
 
-        button:hover ~ .custom-cursor, a:hover ~ .custom-cursor, [onclick]:hover ~ .custom-cursor {
+        button:hover ~ .custom-cursor, a:hover ~ .custom-cursor, [onclick]:hover ~ .custom-cursor, input[type=file] ~ .custom-cursor, label:hover ~ .custom-cursor {
              width: 40px;
              height: 40px;
              background-color: rgba(0, 200, 83, 0.1);
@@ -72,7 +72,6 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32' width='32' height='32' fill='none' stroke='rgb(156 163 175 / 0.1)'%3E%3Cpath d='M0 .5H32V32'/%3E%3C/svg%3E");
         }
 
-        /* Animation for rotating text - NEW ROBUST METHOD */
         .word-container {
             display: inline-block;
             position: relative;
@@ -80,13 +79,13 @@
             text-align: center;
         }
         .word-sizer {
-            visibility: hidden; /* Takes up space but is invisible */
+            visibility: hidden; 
         }
         .rotating-word {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0; /* Ensures it's centered in the container */
+            right: 0; 
             bottom: 0;
             display: inline-block;
             opacity: 0;
@@ -136,115 +135,128 @@
             { name: 'Nykaa', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#fc2779">Nykaa</text></svg> },
             { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
-
-        // --- [FIXED] INTELLIGENT MOCK API to replace failing live call ---
+        
+        // --- [UPGRADED] MOCK API FOR DETAILED RESUME ANALYSIS ---
         const callGeminiAPI = async (resumeText) => {
-            console.log("Simulating AI analysis with an intelligent mock function to avoid API key errors.");
+            console.log("Simulating detailed AI analysis with an intelligent mock function.");
 
-            // This function simulates a real AI by performing a basic analysis on the resume text.
             const generateMockReport = (text) => {
                 const lowerCaseText = text.toLowerCase();
-                let report = { overallScore: 0, overallSummary: "", sections: [] };
-
-                // --- Static data for locked content ---
-                const lockedContentData = {
-                    experience: {
-                        detailedTips: ["Every bullet point should showcase a result. Use the STAR method (Situation, Task, Action, Result) to frame your accomplishments.", "Review the job description for keywords and integrate them naturally into your experience bullet points."],
-                        examples: [{ before: "Responsible for testing the application.", after: "Implemented a testing suite using Jest and React Testing Library, boosting test coverage by 45% and eliminating 15+ pre-production bugs." }, { before: "Worked on a team to build a website.", after: "Collaborated in an Agile team of 4 to develop a client-facing portal, delivering the project 2 weeks ahead of schedule."}],
-                        explanation: "As per the ATS guide, recruiters and automated systems look for concrete data. 'Increased page speed by 40%' is far more powerful than just 'Improved page speed' because it demonstrates the scale of your impact."
-                    },
-                    skills: {
-                        detailedTips: ["Analyze 3-5 job descriptions for your target role and list the most frequently mentioned skills first.", "Include a 'Soft Skills' category with terms like 'Team Collaboration', 'Agile Methodologies', and 'Problem Solving' to pass ATS filters."],
-                        examples: [{ before: "JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git, Python.", after: "Languages: JavaScript (ES6+), Python, SQL\nFrameworks: React.js, Node.js, Express.js\nDatabases: MongoDB\nTools & Technologies: Git, Docker, Jest, Webpack, REST APIs" }],
-                        explanation: "ATS software often scans for specific keywords. A well-organized and keyword-optimized skills section ensures your resume gets ranked higher and noticed by recruiters."
-                    },
-                    projects: {
-                        detailedTips: ["For each project, explicitly state your role (e.g., 'Sole Developer', 'Frontend Lead').", "Add direct, clickable links to GitHub and a live Vercel/Netlify deployment. Ensure repositories have a clean README.md file."],
-                        examples: [{ before: "Portfolio Website: A personal website to showcase my work. Built with React.", after: "Personal Portfolio Website | [Live Link] | [GitHub Link]\n- Developed a fully responsive portfolio utilizing React and Tailwind CSS, deployed on Vercel.\n- Implemented performance optimizations that resulted in a 98/100 Google Lighthouse score, improving load time by 40%." }],
-                        explanation: "Your projects are tangible proof of your skills. Providing links allows recruiters to see your code quality and the final product, making your application much stronger."
-                    },
-                    education: {
-                        detailedTips: ["Add a 'Relevant Coursework' line to list classes that are directly related to the jobs you're applying for (e.g., 'Data Structures & Algorithms', 'Web Development').", "If you've received any honors like 'Dean's List' or scholarships, add them as a bullet point to stand out."],
-                        examples: [{ before: "Bachelor of Technology in Computer Science | State University | 2020-2024", after: "Bachelor of Technology in Computer Science | State University | 2020-2024\n- GPA: 3.8/4.0 (Dean's List 2022, 2023)\n- Relevant Coursework: Data Structures, Algorithms, Database Management, Operating Systems" }],
-                        explanation: "For students and recent graduates, the education section is critical. Highlighting relevant coursework and academic success demonstrates a strong foundation in key areas."
-                    }
+                let report = {
+                    overallScore: 0,
+                    overallSummary: "",
+                    topFixes: [],
+                    sections: []
                 };
 
-                // --- Dynamic Analysis Simulation ---
+                const analyzeExperience = () => {
+                    const sectionText = lowerCaseText.match(/experience|work history([\s\S]*?)(education|skills|projects)/)?.[1] || lowerCaseText;
+                    let score = 50;
+                    const bullets = sectionText.split('\n').filter(line => line.trim().match(/^[-*•]/)).map(line => line.toLowerCase());
+                    const totalBullets = bullets.length || 1;
+                    
+                    const weakVerbsCount = bullets.filter(b => b.match(/responsible for|worked on|assisted with/)).length;
+                    const strongVerbsCount = bullets.filter(b => b.match(/developed|engineered|led|managed|created|launched|optimized|improved|increased|reduced/)).length;
+                    const quantifiedBullets = bullets.filter(b => b.match(/\d+%|\d+ ?k|\$\d+|\d+ /));
+                    
+                    if (strongVerbsCount > weakVerbsCount) score += 15; else score -= 10;
+                    if (quantifiedBullets.length / totalBullets > 0.5) score += 25;
+                    else if (quantifiedBullets.length > 0) score += 15;
+                    else score -= 20;
+                    
+                    return {
+                        id: 'experience', title: 'Experience', score: Math.max(30, Math.min(95, score)),
+                        freeFindings: [
+                           strongVerbsCount > 1 ? "Good use of some strong action verbs." : "Uses passive language ('worked on') instead of impactful action verbs ('developed', 'optimized').",
+                           quantifiedBullets.length > 0 ? "Includes some quantifiable achievements." : "Lacks measurable results and metrics (e.g., %, $, numbers)."
+                        ],
+                        quickTip: "Start every bullet point with a strong action verb (e.g., 'Engineered', 'Managed') and add a number or metric to show the scale of your impact.",
+                        quantification: {
+                            count: quantifiedBullets.length,
+                            total: totalBullets,
+                            percentage: Math.round((quantifiedBullets.length / totalBullets) * 100)
+                        },
+                        lockedContent: {
+                            detailedTips: ["Use the STAR method (Situation, Task, Action, Result) to frame each bullet point.", "Tailor your experience to the job description by including relevant keywords and skills.", "Ensure consistent formatting for dates, titles, and company names."],
+                            examples: [{
+                                before: "Worked on a team to build a new website feature.",
+                                after: "Collaborated in an Agile team of 4 to develop a user authentication feature using React and Node.js, resulting in a 25% increase in user sign-ups."
+                            }, {
+                                before: "Responsible for testing and debugging the application.",
+                                after: "Implemented a comprehensive testing suite with Jest and Cypress, increasing test coverage by 40% and reducing critical bugs in production by 15."
+                            }],
+                            explanation: "Recruiters and ATS software scan for quantifiable impact. 'Increased sign-ups by 25%' is far more compelling than 'built a feature' because it proves your value to the business."
+                        }
+                    };
+                };
                 
-                // 1. Experience Analysis
-                let expScore = 60;
-                const weakVerbs = (lowerCaseText.match(/responsible for|worked on|assisted with/g) || []).length;
-                const strongVerbs = (lowerCaseText.match(/developed|engineered|led|managed|created|launched|optimized/g) || []).length;
-                const metrics = (lowerCaseText.match(/\d+%|\d+ ?k|\$\d+/g) || []).length;
-                
-                if (strongVerbs > weakVerbs) expScore += 15;
-                if (weakVerbs > strongVerbs) expScore -= 15;
-                if (metrics > 1) expScore += 20; else expScore -=10;
-                
-                report.sections.push({
-                  id: 'experience', title: 'Experience', score: Math.max(40, Math.min(95, expScore)),
-                  findings: [
-                      strongVerbs > weakVerbs ? "Good use of some action verbs." : "Uses passive language instead of strong action verbs.",
-                      metrics > 1 ? "Includes some quantifiable achievements." : "Lacks measurable results and metrics."
-                  ],
-                  quickTip: "Strengthen bullet points by starting with a powerful action verb and adding a number or metric to show impact.",
-                  lockedContent: lockedContentData.experience
-                });
-                
-                // 2. Skills Analysis
-                let skillsScore = 55;
-                const skillCategories = (lowerCaseText.match(/languages:|frameworks:|tools:|databases:/g) || []).length;
-                if (skillCategories > 1) skillsScore += 30;
-                if (lowerCaseText.includes('agile') || lowerCaseText.includes('collaboration')) skillsScore += 10;
-                
-                report.sections.push({
-                    id: 'skills', title: 'Skills', score: Math.max(45, Math.min(95, skillsScore)),
-                    findings: [
-                        skillCategories > 1 ? "Skills section appears to be categorized." : "Skills are not grouped into categories like 'Languages' or 'Tools'.",
-                        "Could benefit from adding more job-relevant soft skills."
-                    ],
-                    quickTip: "Group your skills into clear categories to improve readability for both recruiters and ATS.",
-                    lockedContent: lockedContentData.skills
-                });
-                
-                // 3. Projects Analysis
-                let projScore = 65;
-                const hasGithub = lowerCaseText.includes('github.com');
-                const hasLiveLink = lowerCaseText.includes('vercel') || lowerCaseText.includes('netlify') || lowerCaseText.includes('live demo');
-                if (hasGithub) projScore += 15;
-                if(hasLiveLink) projScore +=10;
+                const analyzeSkills = () => {
+                    let score = 45;
+                    const hasCategories = (lowerCaseText.match(/languages:|frameworks:|tools:|databases:/g) || []).length > 1;
+                    const hasSoftSkills = lowerCaseText.includes('agile') || lowerCaseText.includes('collaboration') || lowerCaseText.includes('problem solving');
+                    
+                    if (hasCategories) score += 30;
+                    if (hasSoftSkills) score += 15;
+                    
+                    return {
+                        id: 'skills', title: 'Skills', score: Math.max(40, Math.min(95, score)),
+                        freeFindings: [
+                            hasCategories ? "Skills appear to be categorized." : "Skills are listed in one block, making it hard for recruiters to scan.",
+                            "ATS keywords could be better optimized for target roles."
+                        ],
+                        quickTip: "Group your skills into clear categories like 'Languages', 'Frameworks & Libraries', 'Developer Tools', and 'Databases' to improve readability.",
+                        lockedContent: {
+                            detailedTips: ["Analyze 3-5 job descriptions for your target role and list the most frequently mentioned skills first.", "Create a 'Technical Skills' section and a separate 'Soft Skills' section.", "Avoid proficiency ratings like progress bars or 'expert' labels, as ATS cannot parse them."],
+                            examples: [{
+                                before: "JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git, Python, Teamwork.",
+                                after: "Technical Skills:\n- Languages: JavaScript (ES6+), Python, HTML5, CSS3, SQL\n- Frameworks: React.js, Node.js, Express.js\n- Databases: MongoDB, PostgreSQL\n- Tools: Git, Docker, Webpack, Jest, Cypress\nSoft Skills: Agile Methodologies, Team Collaboration, Problem Solving, Communication"
+                            }],
+                            explanation: "A well-organized skills section helps ATS software correctly identify your qualifications and allows human recruiters to quickly assess your fit for the role in under 10 seconds."
+                        }
+                    };
+                };
 
-                report.sections.push({
-                   id: 'projects', title: 'Projects', score: Math.max(50, Math.min(95, projScore)),
-                    findings: [
-                       "Project descriptions are present.",
-                       hasGithub || hasLiveLink ? "Includes links to repositories or live demos." : "Missing links to GitHub or live demos, which are crucial for showcasing work."
-                    ],
-                    quickTip: "Ensure every project includes a clickable link to a GitHub repository with a well-written README file.",
-                    lockedContent: lockedContentData.projects
-                });
+                const analyzeFormatting = () => {
+                    let score = 55;
+                    const isOnePage = (text.split(" ").length < 800);
+                    const usesStandardFont = !lowerCaseText.includes('comic sans');
+                    
+                    if (isOnePage) score += 20; else score -=15;
+                    if (usesStandardFont) score += 10;
+                    
+                    return {
+                        id: 'formatting', title: 'Formatting & ATS Compliance', score: Math.max(40, Math.min(90, score)),
+                        freeFindings: [
+                            isOnePage ? "Resume appears to be a reasonable length." : "Resume may be longer than the recommended one page for most roles.",
+                            "Standard fonts and clear headers are used, which is good for ATS."
+                        ],
+                        quickTip: "Ensure your resume is saved and uploaded as a PDF. Use standard fonts like Inter, Arial, or Calibri (size 10-12pt) and avoid graphics, tables, or columns which can confuse ATS.",
+                        lockedContent: {
+                            detailedTips: ["Use consistent formatting for all section headers (e.g., all caps, bold).", "Maintain adequate white space and margins (0.5 to 1 inch) to avoid a cluttered look.", "Proofread meticulously for any spelling or grammar errors. Use a tool like Grammarly."],
+                            examples: [{
+                                before: "A resume with inconsistent heading sizes, multiple columns, and a mix of fonts.",
+                                after: "A clean, single-column resume with consistent H1/H2 style headings, uniform date formats (e.g., 'Jan 2023 – Present'), and ample white space."
+                            }],
+                            explanation: "Clean, consistent formatting is crucial. ATS (Applicant Tracking Systems) parse resumes like a machine, and complex layouts can cause your information to be read incorrectly or skipped entirely."
+                        }
+                    };
+                }
 
-                // 4. Education Analysis
-                let eduScore = 70;
-                if(lowerCaseText.includes('gpa') && (lowerCaseText.match(/3\.[5-9]|4\.0/g) || []).length > 0) eduScore += 15;
-                if(lowerCaseText.includes('dean\'s list') || lowerCaseText.includes('scholarship')) eduScore += 10;
-
-                 report.sections.push({
-                   id: 'education', title: 'Education', score: Math.max(60, Math.min(95, eduScore)),
-                    findings: [
-                       "Education section is clearly formatted.",
-                       eduScore > 80 ? "Good inclusion of academic achievements." : "Could be enhanced by adding a high GPA, relevant coursework, or academic honors."
-                    ],
-                    quickTip: "If your GPA is above 3.5 (or equivalent), make sure it's clearly listed. Also, add a 'Relevant Coursework' line.",
-                    lockedContent: lockedContentData.education
-                });
-
-                // --- Final Calculation ---
+                const expReport = analyzeExperience();
+                const skillsReport = analyzeSkills();
+                const formatReport = analyzeFormatting();
+                report.sections = [expReport, skillsReport, formatReport];
+                
                 const totalScore = report.sections.reduce((acc, s) => acc + s.score, 0);
                 report.overallScore = Math.round(totalScore / report.sections.length);
-                report.overallSummary = `This resume has a solid foundation with a score of ${report.overallScore}. The main areas for improvement are quantifying experience and structuring the skills section for better ATS performance.`;
+                report.overallSummary = `Your resume has a decent foundation but needs key improvements in impact quantification and ATS keyword optimization to stand out.`;
                 
+                report.topFixes = [
+                    { id: 'fix1', title: 'Quantify Impact', hint: 'Add numbers to show results', score: Math.round(expReport.quantification.percentage / 10), sectionId: 'experience' },
+                    { id: 'fix2', title: 'Categorize Skills', hint: 'Group skills for readability', score: Math.round(skillsReport.score / 10) - 2, sectionId: 'skills' },
+                    { id: 'fix3', title: 'Improve ATS Compliance', hint: 'Check for formatting errors', score: Math.round(formatReport.score / 10), sectionId: 'formatting' },
+                ].sort((a, b) => a.score - b.score);
+
                 return report;
             };
 
@@ -252,10 +264,9 @@
                 setTimeout(() => {
                     const report = generateMockReport(resumeText);
                     resolve(report);
-                }, 1500); // Simulate network delay
+                }, 1500);
             });
         };
-
 
         // --- ASSETS & ICONS ---
         const Logo = () => (
@@ -310,6 +321,7 @@
 
         const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
         const CheckIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>);
+        const ChevronRightIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>);
 
 
         // --- CONTEXT API for State Management ---
@@ -456,7 +468,7 @@
         );
 
         const Card = ({ children, className }) => (
-            <div className={`bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden transition-all duration-300 hover:border-[#00C853]/50 hover:shadow-[0_0_20px_rgba(0,200,83,0.3)] md:hover:-translate-y-2 ${className}`}>
+            <div className={`bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden transition-all duration-300 hover:border-[#00C853]/50 hover:shadow-[0_0_20px_rgba(0,200,83,0.3)] md:hover:-translate-y-1 ${className}`}>
                 {children}
             </div>
         );
@@ -485,7 +497,7 @@
                 const interval = setInterval(() => {
                     setCurrentIndex((prevIndex) => (prevIndex + 1) % rotatingWords.length);
                     setKey(prevKey => prevKey + 1);
-                }, 1500); // Change word every 1.5 seconds
+                }, 1500); 
 
                 return () => clearInterval(interval);
             }, []);
@@ -499,7 +511,7 @@
                                  <div className="flex justify-center items-baseline flex-wrap">
                                     <span>Xperto,</span>
                                     <span className="word-container mx-2 text-[#00C853]">
-                                        <span className="word-sizer">Placements</span> {/* Invisible sizer */}
+                                        <span className="word-sizer">Placements</span>
                                         <span className="rotating-word" key={key}>
                                             {rotatingWords[currentIndex]}
                                         </span>
@@ -649,24 +661,21 @@
             );
         };
         
-        // --- [START] REBUILT RESUME OPTIMIZER PAGE ---
-        const ResumeOptimizerPageThemed = () => {
+        const ResumeOptimizerPage = () => {
             const { showNotification } = useAppContext();
             const [file, setFile] = React.useState(null);
             const [resumeText, setResumeText] = React.useState('');
             const [report, setReport] = React.useState(null);
             const [isReportUnlocked, setIsReportUnlocked] = React.useState(false);
             const [loading, setLoading] = React.useState(false);
-            const [selectedSectionId, setSelectedSectionId] = React.useState(null);
+            const [activeView, setActiveView] = React.useState({ type: 'top_fixes', id: null });
 
-            const activeSection = report ? report.sections.find(s => s.id === selectedSectionId) : null;
-
-            const getScoreColorClasses = (score) => {
-                if (score <= 60) return { text: 'text-red-400', bg: 'bg-red-900/50' };
-                if (score <= 90) return { text: 'text-yellow-400', bg: 'bg-yellow-900/50' };
-                return { text: 'text-green-400', bg: 'bg-green-900/50' };
+            const getScoreColor = (score) => {
+                if (score <= 60) return '#ef4444'; // red-500
+                if (score <= 90) return '#facc15'; // yellow-400
+                return '#4ade80'; // green-400
             };
-
+            
             const handleFileChange = async (e) => {
                 const uploadedFile = e.target.files[0];
                 if (!uploadedFile) return;
@@ -674,7 +683,7 @@
                 setFile(uploadedFile);
                 setReport(null);
                 setIsReportUnlocked(false);
-                setSelectedSectionId(null);
+                setActiveView({ type: 'top_fixes', id: null });
 
                 const reader = new FileReader();
                 reader.onload = async (event) => {
@@ -707,37 +716,60 @@
                 const result = await callGeminiAPI(resumeText);
                 setLoading(false);
 
-                if (result && result.sections && result.sections.length > 0) {
-                    const sortedSections = [...result.sections].sort((a, b) => a.score - b.score);
-                    setReport({ ...result, sections: sortedSections });
-                    setSelectedSectionId(sortedSections[0]?.id);
+                if (result) {
+                    setReport(result);
+                    setActiveView({ type: 'top_fixes', id: result.topFixes[0].sectionId });
                     showNotification('Free analysis complete!', 'success');
                 } else {
-                    showNotification(result.overallSummary || 'Analysis failed. Please try again.', 'error');
+                    showNotification('Analysis failed. Please try again.', 'error');
                 }
             };
-            
-            const ScoreCircle = ({ score }) => {
-                const { text } = getScoreColorClasses(score);
+
+            const ScoreDonut = ({ score }) => {
+                const color = getScoreColor(score);
+                const circumference = 2 * Math.PI * 45;
+                const offset = circumference - (score / 100) * circumference;
+
                 return (
-                    <div className={`flex items-center justify-center rounded-full bg-gray-800 font-bold w-10 h-10 text-lg ${text}`}>
-                        {score}
+                    <div className="relative w-40 h-40">
+                        <svg className="w-full h-full" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="transparent" stroke="#374151" strokeWidth="10" />
+                            <circle
+                                cx="50" cy="50" r="45"
+                                fill="transparent"
+                                stroke={color}
+                                strokeWidth="10"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={offset}
+                                strokeLinecap="round"
+                                transform="rotate(-90 50 50)"
+                                style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-4xl font-bold" style={{ color }}>{score}</span>
+                        </div>
                     </div>
                 );
             };
 
+            const BadgeScore = ({ score }) => {
+                const color = getScoreColor(score * 10);
+                return <div className="w-8 h-8 flex items-center justify-center rounded-md font-bold text-lg text-white" style={{backgroundColor: color}}>{score}</div>
+            };
+            
             const LockedContent = ({ onUnlock }) => (
                  <div className="mt-8 relative">
                     <div className="blur-sm pointer-events-none space-y-6 opacity-60">
                          <div>
                             <h3 className="text-lg font-semibold text-gray-200">Detailed Improvements</h3>
-                            <p className="mt-2 text-sm text-gray-400 bg-gray-800/50 p-3 rounded-md">Unlock to see specific advice tailored to your resume section.</p>
+                            <p className="mt-2 text-sm text-gray-400 bg-gray-800/50 p-3 rounded-md">Every bullet point should showcase a result. Use the STAR method to frame your accomplishments.</p>
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-200">Rewritten Examples</h3>
+                            <h3 className="text-lg font-semibold text-gray-200">Rewritten Examples (Before/After)</h3>
                              <div className="mt-2 p-4 border border-gray-700 rounded-lg">
-                                <p className="text-xs text-red-500">Before: Example of a weak entry...</p>
-                                <p className="text-xs text-green-500 mt-1">After: A strong, rewritten example...</p>
+                                <p className="text-xs text-red-400 font-semibold">Before: "Worked on a website."</p>
+                                <p className="text-xs text-green-400 font-semibold mt-2">After: "Developed a portfolio website using React, improving load time by 40%."</p>
                             </div>
                         </div>
                     </div>
@@ -749,6 +781,96 @@
                 </div>
             );
 
+            const MainContentPane = () => {
+                const section = report.sections.find(s => s.id === activeView.id);
+                if (!section) return null;
+
+                const topFixForSection = report.topFixes.find(f => f.sectionId === section.id);
+
+                return (
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8">
+                        {activeView.type === 'top_fixes' && topFixForSection ? (
+                            <>
+                                <h2 className="text-2xl font-bold text-white mb-1">Top Fix: <span className="text-[#00C853]">{topFixForSection.title}</span></h2>
+                                <p className="text-gray-400 mb-6">Here's the highest-impact change you can make to your resume right now.</p>
+                                
+                                <div className="border-t border-gray-700 pt-6">
+                                     <h3 className="text-lg font-semibold text-white">Key Findings</h3>
+                                      <ul className="mt-3 space-y-2">
+                                          {section.freeFindings.slice(0, 2).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                      </ul>
+                                </div>
+                                
+                                {section.id === 'experience' && section.quantification && (
+                                    <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+                                        <div className="flex justify-between items-center text-sm font-semibold mb-2">
+                                            <span className="text-gray-300">Quantified Bullets</span>
+                                            <span className="text-white">{section.quantification.count} / {section.quantification.total}</span>
+                                        </div>
+                                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                                            <div className="bg-[#00C853] h-2.5 rounded-full" style={{width: `${section.quantification.percentage}%`}}></div>
+                                        </div>
+                                        <p className="text-center text-xs text-gray-400 mt-2">{section.quantification.percentage}% of your experience points show measurable impact.</p>
+                                    </div>
+                                )}
+                                
+                                <div className="mt-6">
+                                    <h3 className="text-lg font-semibold text-white">Free Quick Fix</h3>
+                                    <p className="mt-2 text-sm text-gray-300 bg-green-900/50 p-4 rounded-lg border border-green-500/30">{section.quickTip}</p>
+                                </div>
+
+                                <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                            </>
+                        ) : (
+                             <>
+                                <div className={`p-4 rounded-lg flex items-center bg-gray-800`}>
+                                    <h2 className="flex-grow text-2xl font-bold text-white">{section.title}</h2>
+                                    <div className={`flex items-center justify-center rounded-full bg-gray-900 font-bold w-12 h-12 text-2xl border-2`} style={{borderColor: getScoreColor(section.score), color: getScoreColor(section.score)}}>
+                                        {section.score}
+                                    </div>
+                                </div>
+                                <div className="mt-6 border-b border-gray-700 pb-6">
+                                    <h3 className="text-lg font-semibold text-white">Free Findings</h3>
+                                    <ul className="mt-3 space-y-2">
+                                        {section.freeFindings.map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                    </ul>
+                                </div>
+                                
+                                {isReportUnlocked ? (
+                                    <div className="mt-8 space-y-8 animate-fade-in">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-green-400">Detailed Improvements</h3>
+                                            <ul className="mt-3 list-disc list-inside text-gray-300 space-y-2">
+                                                {section.lockedContent.detailedTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                                            </ul>
+                                        </div>
+                                         <div>
+                                            <h3 className="text-xl font-bold text-green-400">Rewritten Examples</h3>
+                                            <div className="mt-3 space-y-4">
+                                            {section.lockedContent.examples.map((ex, i) => (
+                                                <div key={i} className="p-4 border border-gray-700 rounded-lg">
+                                                    <p className="text-sm font-semibold text-red-400">Before:</p>
+                                                    <p className="text-sm text-gray-400 italic pl-4 border-l-2 border-red-500/50 ml-2 py-1">"{ex.before}"</p>
+                                                    <p className="text-sm font-semibold text-green-400 mt-3">After:</p>
+                                                    <p className="text-sm text-gray-200 pl-4 border-l-2 border-green-500/50 ml-2 py-1 whitespace-pre-wrap">{ex.after}</p>
+                                                </div>
+                                            ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-green-400">Why It Matters</h3>
+                                            <p className="mt-2 text-gray-300">{section.lockedContent.explanation}</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                                )}
+                             </>
+                        )}
+                    </div>
+                );
+            };
+
             return (
                 <div className="container mx-auto px-4 sm:px-6 py-16 md:py-20 animate-fade-in min-h-screen">
                     {!report && (
@@ -759,8 +881,15 @@
                             </div>
                             <div className="max-w-2xl mx-auto mt-12">
                                 <Card className="p-6 sm:p-8 hover:border-[#00C853]/50 transition-colors">
-                                    <input type="file" accept=".pdf" onChange={handleFileChange} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-gray-300 hover:file:bg-gray-700"/>
-                                    {file && <p className="mt-4 text-sm text-gray-500">Selected: {file.name}</p>}
+                                    <div className="flex justify-center">
+                                        <label htmlFor="resume-upload" className="cursor-pointer text-center p-8 border-2 border-dashed border-gray-600 rounded-xl hover:border-green-500 hover:bg-gray-800/50 transition-colors w-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                            <p className="mt-2 font-semibold text-white">Click to Upload your Resume</p>
+                                            <p className="text-xs text-gray-500">PDF up to 5MB</p>
+                                        </label>
+                                        <input id="resume-upload" type="file" accept=".pdf" onChange={handleFileChange} className="hidden"/>
+                                    </div>
+                                    {file && <p className="mt-4 text-sm text-center text-gray-400">Selected: <span className="font-semibold text-gray-200">{file.name}</span></p>}
                                     <button onClick={handleAnalyze} disabled={loading || !file} className="mt-6 w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed">
                                         {loading ? 'Analyzing...' : 'Grade My Resume'}
                                     </button>
@@ -773,87 +902,78 @@
                         <div className="grid lg:grid-cols-12 gap-8 animate-slide-in-up">
                             <aside className="lg:col-span-4 xl:col-span-3">
                                 <div className="p-4 rounded-xl bg-gray-900 border border-gray-800 sticky top-24">
-                                    <h2 className="text-lg font-bold text-white mb-3">Overall Score</h2>
-                                    <div className={`p-4 rounded-lg text-center ${getScoreColorClasses(report.overallScore).bg}`}>
-                                        <p className={`text-6xl font-bold ${getScoreColorClasses(report.overallScore).text}`}>{report.overallScore}<span className="text-3xl text-gray-500">/100</span></p>
+                                    <div className="flex flex-col items-center">
+                                        <ScoreDonut score={report.overallScore} />
+                                        <p className="mt-3 text-center text-sm text-gray-400">{report.overallSummary}</p>
                                     </div>
-                                    <p className="mt-3 text-sm text-gray-400">{report.overallSummary}</p>
                                     
-                                    <h3 className="font-semibold text-gray-200 mt-6 mb-3">Section Breakdown</h3>
+                                    <h3 className="font-semibold text-gray-200 mt-6 mb-3">Top 3 Fixes</h3>
+                                    <div className="space-y-2">
+                                        {report.topFixes.map(fix => (
+                                            <button key={fix.id} onClick={() => setActiveView({ type: 'top_fixes', id: fix.sectionId })}
+                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
+                                                <BadgeScore score={fix.score} />
+                                                <div className="ml-3 flex-grow">
+                                                    <p className="font-semibold text-gray-100">{fix.title}</p>
+                                                    <p className="text-xs text-gray-400">{fix.hint}</p>
+                                                </div>
+                                                <ChevronRightIcon />
+                                            </button>
+                                        ))}
+                                    </div>
+                                    
+                                    <div className="border-t border-gray-700 my-4"></div>
+                                    
+                                    <h3 className="font-semibold text-gray-200 mb-3">Detailed Report</h3>
                                     <div className="space-y-2">
                                         {report.sections.map(section => (
-                                            <button key={section.id} onClick={() => setSelectedSectionId(section.id)}
-                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${selectedSectionId === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
+                                            <button key={section.id} onClick={() => setActiveView({ type: 'section', id: section.id })}
+                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'section' && activeView.id === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
                                                 <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
-                                                <ScoreCircle score={section.score} />
+                                                <div className={`font-bold text-lg`} style={{color: getScoreColor(section.score)}}>{section.score}</div>
                                             </button>
                                         ))}
                                     </div>
                                 </div>
                             </aside>
 
-                            {activeSection && (
-                                <main className="lg:col-span-8 xl:col-span-9">
-                                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8">
-                                        <div className={`p-4 rounded-lg flex items-center ${getScoreColorClasses(activeSection.score).bg}`}>
-                                            <h2 className={`flex-grow text-2xl font-bold ${getScoreColorClasses(activeSection.score).text}`}>{activeSection.title} Section</h2>
-                                            <ScoreCircle score={activeSection.score} />
-                                        </div>
-                                        
-                                        <div className="mt-6 border-b border-gray-700 pb-6">
-                                            <h3 className="text-lg font-semibold text-white">Key Findings</h3>
-                                            <ul className="mt-3 space-y-2">
-                                                {activeSection.findings.map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
-                                            </ul>
-                                        </div>
-
-                                        <div className="mt-6">
-                                            <h3 className="text-lg font-semibold text-white">Quick Tip</h3>
-                                            <p className="mt-2 text-sm text-gray-300 bg-green-900/50 p-4 rounded-lg border border-green-500/30">{activeSection.quickTip}</p>
-                                        </div>
-                                        
-                                        {isReportUnlocked ? (
-                                            <div className="mt-8 space-y-8 animate-fade-in">
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-green-400">Detailed Improvements</h3>
-                                                    <ul className="mt-3 list-disc list-inside text-gray-300 space-y-2">
-                                                        {activeSection.lockedContent.detailedTips.map((tip, i) => <li key={i}>{tip}</li>)}
-                                                    </ul>
-                                                </div>
-                                                 <div>
-                                                    <h3 className="text-xl font-bold text-green-400">Rewritten Examples</h3>
-                                                    <div className="mt-3 space-y-4">
-                                                    {activeSection.lockedContent.examples.map((ex, i) => (
-                                                        <div key={i} className="p-4 border border-gray-700 rounded-lg">
-                                                            <p className="text-sm font-semibold text-red-400">Before:</p>
-                                                            <p className="text-sm text-gray-400 italic pl-4 border-l-2 border-red-500/50 ml-2 py-1">"{ex.before}"</p>
-                                                            <p className="text-sm font-semibold text-green-400 mt-3">After:</p>
-                                                            <p className="text-sm text-gray-200 pl-4 border-l-2 border-green-500/50 ml-2 py-1 whitespace-pre-wrap">{ex.after}</p>
-                                                        </div>
-                                                    ))}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-green-400">Why It Matters</h3>
-                                                    <p className="mt-2 text-gray-300">{activeSection.lockedContent.explanation}</p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
-                                        )}
-                                    </div>
-                                </main>
-                            )}
+                            <main className="lg:col-span-8 xl:col-span-9">
+                                {activeView.id && <MainContentPane />}
+                            </main>
                         </div>
                     )}
                 </div>
             );
         };
-        // --- [END] REBUILT RESUME OPTIMIZER PAGE ---
 
         const CoursesPageThemed = () => {
-            // Placeholder for Courses Page
-            return <div className="text-center py-20 text-white">Courses Page</div>;
+             return (
+                 <div className="container mx-auto px-4 sm:px-6 py-16 md:py-20 animate-fade-in min-h-[70vh]">
+                     <div className="max-w-3xl mx-auto text-center">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">Our Courses</h1>
+                        <p className="mt-4 text-gray-400">Invest in yourself. Learn the skills that will get you hired.</p>
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 md:mt-16">
+                        {MOCK_COURSES.map(course => (
+                            <Card key={course.id} className="flex flex-col">
+                                <div className="p-6 flex-grow">
+                                    <div className="flex justify-between items-start">
+                                        <p className="text-sm font-semibold text-[#00C853]">{course.level}</p>
+                                        <p className="text-lg font-bold text-white">₹{course.price}</p>
+                                    </div>
+                                    <h3 className="text-xl font-bold mt-2 text-white">{course.title}</h3>
+                                    <p className="text-gray-400 mt-2 text-sm">{course.description}</p>
+                                </div>
+                                <div className="p-6 border-t border-gray-800">
+                                    <button className="w-full py-2 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 transition-colors">
+                                        Enroll Now
+                                    </button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                 </div>
+             );
         };
 
         const FreelancePageThemed = () => {
@@ -866,9 +986,8 @@
                 setSelectedJob(job);
                 setCoverLetter('');
                 setIsAiLoading(true);
-                // Simple mock cover letter generation
                 setTimeout(() => {
-                    setCoverLetter(`Dear Hiring Manager at ${job.company},\n\nI am writing to express my interest in the ${job.title} position...`);
+                    setCoverLetter(`Dear Hiring Manager at ${job.company},\n\nI am writing to express my strong interest in the ${job.title} role I saw advertised on Xperto. With my experience in ${job.skill}, I am confident I can contribute effectively to your team.\n\nThank you for your time and consideration.\n\nSincerely,\nA Job Seeker`);
                     setIsAiLoading(false);
                 }, 1000);
             };
@@ -881,7 +1000,7 @@
                     </div>
                     <div className="space-y-6 max-w-4xl mx-auto mt-12 md:mt-16">
                         {MOCK_JOBS.map(job => (
-                            <Card key={job.id} className="p-6 hover:border-[#00C853]">
+                            <Card key={job.id} className="p-6 hover:border-[#00C853]/80">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div>
                                         <h3 className="text-xl font-bold text-white">{job.title}</h3>
@@ -896,11 +1015,14 @@
                         ))}
                     </div>
                      {selectedJob && (
-                        <Modal title={`Cover Letter for ${selectedJob.title}`} onClose={() => setSelectedJob(null)}>
+                        <Modal title={`AI Cover Letter for ${selectedJob.title}`} onClose={() => setSelectedJob(null)}>
                             {isAiLoading ? (
-                                <p className="text-center text-gray-400">Generating your cover letter...</p>
+                                <p className="text-center text-gray-400 py-12">Generating your cover letter with AI...</p>
                             ) : (
-                                <textarea readOnly value={coverLetter} className="w-full h-64 p-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-sm whitespace-pre-wrap"></textarea>
+                                <>
+                                    <textarea readOnly value={coverLetter} className="w-full h-64 p-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-sm whitespace-pre-wrap"></textarea>
+                                    <button onClick={() => { showNotification('Copied to clipboard!'); setSelectedJob(null); }} className="mt-4 w-full py-2 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400">Copy & Close</button>
+                                </>
                             )}
                         </Modal>
                     )}
@@ -975,7 +1097,7 @@
                 switch (page) {
                     case 'home': return <HomePage />;
                     case 'courses': return <CoursesPageThemed />;
-                    case 'resume': return <ResumeOptimizerPageThemed />;
+                    case 'resume': return <ResumeOptimizerPage />;
                     case 'freelance': return <FreelancePageThemed />;
                     case 'login': return <LoginPageThemed />;
                     case 'dashboard': return <DashboardPageThemed />;
