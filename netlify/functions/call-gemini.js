@@ -1,34 +1,30 @@
-exports.handler = async function(event, context) {
-    // Only allow POST requests
+// netlify/functions/call-gemini.js
+exports.handler = async function(event) {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
-        const { prompt, jsonResponse } = JSON.parse(event.body);
-        const apiKey = process.env.GEMINI_API_KEY; // Securely access the API key from Netlify's environment variables
+        const { prompt } = JSON.parse(event.body);
+        const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
             throw new Error('API key is not set in Netlify environment variables.');
         }
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        // Using a v1beta model that supports JSON mode
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest?key=${apiKey}`;
 
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                response_mime_type: "application/json",
+            },
         };
-
-        if (jsonResponse) {
-            payload.generationConfig = {
-                responseMimeType: "application/json",
-            };
-        }
 
         const geminiResponse = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
 
@@ -37,15 +33,19 @@ exports.handler = async function(event, context) {
             console.error('Gemini API Error:', errorBody);
             return {
                 statusCode: geminiResponse.status,
-                body: JSON.stringify({ error: 'Failed to fetch from Gemini API.' }),
+                body: JSON.stringify({ error: `Gemini API failed: ${errorBody}` }),
             };
         }
 
         const result = await geminiResponse.json();
         
+        // **Modification**: Extract the clean JSON text from Gemini's nested response
+        const cleanJsonText = result.candidates[0].content.parts[0].text;
+
         return {
             statusCode: 200,
-            body: JSON.stringify(result),
+            // Return the clean JSON directly
+            body: cleanJsonText, 
         };
 
     } catch (error) {
@@ -56,4 +56,3 @@ exports.handler = async function(event, context) {
         };
     }
 };
-
