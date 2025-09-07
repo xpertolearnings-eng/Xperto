@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xperto - Build Your Future</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2300C853'/></svg>">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React Libraries -->
@@ -190,8 +191,11 @@
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    if (response.status === 404) {
+                        throw new Error('Function not found. Ensure you are running this with `netlify dev` or that it has been deployed correctly.');
+                    }
+                    const errorText = await response.text();
+                    throw new Error(`Network response was not ok: ${response.status}. ${errorText}`);
                 }
 
                 // Because our function now returns clean JSON, we can use it directly
@@ -1065,3 +1069,4 @@
     </script>
 </body>
 </html>
+
