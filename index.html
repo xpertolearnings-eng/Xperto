@@ -136,136 +136,73 @@
             { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
         
-        // --- [UPGRADED] MOCK API FOR DETAILED RESUME ANALYSIS ---
+        // --- [UPGRADED] CALL TO NETLIFY FUNCTION FOR RESUME ANALYSIS ---
         const callGeminiAPI = async (resumeText) => {
-            console.log("Simulating detailed AI analysis with an intelligent mock function.");
+            console.log("Calling Netlify Function for real AI analysis...");
 
-            const generateMockReport = (text) => {
-                const lowerCaseText = text.toLowerCase();
-                let report = {
-                    overallScore: 0,
-                    overallSummary: "",
-                    topFixes: [],
-                    sections: []
-                };
+            // The detailed prompt is now constructed here in the frontend
+            const systemPrompt = `
+            You are an expert resume analyzer for a platform called Xperto. Analyze the provided resume text and return a structured JSON report. The analysis must be specific to the content provided, not generic.
 
-                const analyzeExperience = () => {
-                    const sectionText = lowerCaseText.match(/experience|work history([\s\S]*?)(education|skills|projects)/)?.[1] || lowerCaseText;
-                    let score = 50;
-                    const bullets = sectionText.split('\n').filter(line => line.trim().match(/^[-*•]/)).map(line => line.toLowerCase());
-                    const totalBullets = bullets.length || 1;
-                    
-                    const weakVerbsCount = bullets.filter(b => b.match(/responsible for|worked on|assisted with/)).length;
-                    const strongVerbsCount = bullets.filter(b => b.match(/developed|engineered|led|managed|created|launched|optimized|improved|increased|reduced/)).length;
-                    const quantifiedBullets = bullets.filter(b => b.match(/\d+%|\d+ ?k|\$\d+|\d+ /));
-                    
-                    if (strongVerbsCount > weakVerbsCount) score += 15; else score -= 10;
-                    if (quantifiedBullets.length / totalBullets > 0.5) score += 25;
-                    else if (quantifiedBullets.length > 0) score += 15;
-                    else score -= 20;
-                    
-                    return {
-                        id: 'experience', title: 'Experience', score: Math.max(30, Math.min(95, score)),
-                        freeFindings: [
-                           strongVerbsCount > 1 ? "Good use of some strong action verbs." : "Uses passive language ('worked on') instead of impactful action verbs ('developed', 'optimized').",
-                           quantifiedBullets.length > 0 ? "Includes some quantifiable achievements." : "Lacks measurable results and metrics (e.g., %, $, numbers)."
-                        ],
-                        quickTip: "Start every bullet point with a strong action verb (e.g., 'Engineered', 'Managed') and add a number or metric to show the scale of your impact.",
-                        quantification: {
-                            count: quantifiedBullets.length,
-                            total: totalBullets,
-                            percentage: Math.round((quantifiedBullets.length / totalBullets) * 100)
-                        },
-                        lockedContent: {
-                            detailedTips: ["Use the STAR method (Situation, Task, Action, Result) to frame each bullet point.", "Tailor your experience to the job description by including relevant keywords and skills.", "Ensure consistent formatting for dates, titles, and company names."],
-                            examples: [{
-                                before: "Worked on a team to build a new website feature.",
-                                after: "Collaborated in an Agile team of 4 to develop a user authentication feature using React and Node.js, resulting in a 25% increase in user sign-ups."
-                            }, {
-                                before: "Responsible for testing and debugging the application.",
-                                after: "Implemented a comprehensive testing suite with Jest and Cypress, increasing test coverage by 40% and reducing critical bugs in production by 15."
-                            }],
-                            explanation: "Recruiters and ATS software scan for quantifiable impact. 'Increased sign-ups by 25%' is far more compelling than 'built a feature' because it proves your value to the business."
-                        }
-                    };
-                };
-                
-                const analyzeSkills = () => {
-                    let score = 45;
-                    const hasCategories = (lowerCaseText.match(/languages:|frameworks:|tools:|databases:/g) || []).length > 1;
-                    const hasSoftSkills = lowerCaseText.includes('agile') || lowerCaseText.includes('collaboration') || lowerCaseText.includes('problem solving');
-                    
-                    if (hasCategories) score += 30;
-                    if (hasSoftSkills) score += 15;
-                    
-                    return {
-                        id: 'skills', title: 'Skills', score: Math.max(40, Math.min(95, score)),
-                        freeFindings: [
-                            hasCategories ? "Skills appear to be categorized." : "Skills are listed in one block, making it hard for recruiters to scan.",
-                            "ATS keywords could be better optimized for target roles."
-                        ],
-                        quickTip: "Group your skills into clear categories like 'Languages', 'Frameworks & Libraries', 'Developer Tools', and 'Databases' to improve readability.",
-                        lockedContent: {
-                            detailedTips: ["Analyze 3-5 job descriptions for your target role and list the most frequently mentioned skills first.", "Create a 'Technical Skills' section and a separate 'Soft Skills' section.", "Avoid proficiency ratings like progress bars or 'expert' labels, as ATS cannot parse them."],
-                            examples: [{
-                                before: "JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git, Python, Teamwork.",
-                                after: "Technical Skills:\n- Languages: JavaScript (ES6+), Python, HTML5, CSS3, SQL\n- Frameworks: React.js, Node.js, Express.js\n- Databases: MongoDB, PostgreSQL\n- Tools: Git, Docker, Webpack, Jest, Cypress\nSoft Skills: Agile Methodologies, Team Collaboration, Problem Solving, Communication"
-                            }],
-                            explanation: "A well-organized skills section helps ATS software correctly identify your qualifications and allows human recruiters to quickly assess your fit for the role in under 10 seconds."
-                        }
-                    };
-                };
+            **Output Rules:**
+            1.  **JSON ONLY:** Your entire response MUST be a single, valid JSON object.
+            2.  **Match the Schema:** The JSON structure must strictly follow the schema.
+            3.  **Content-Specific:** All findings and scores must be derived directly from the provided resume text.
+            4.  **Scoring Logic:** Scores should be between 30 and 95. A score of 55 is average. Base scores on specific evidence (e.g., high 'Experience' score for quantified results).
 
-                const analyzeFormatting = () => {
-                    let score = 55;
-                    const isOnePage = (text.split(" ").length < 800);
-                    const usesStandardFont = !lowerCaseText.includes('comic sans');
-                    
-                    if (isOnePage) score += 20; else score -=15;
-                    if (usesStandardFont) score += 10;
-                    
-                    return {
-                        id: 'formatting', title: 'Formatting & ATS Compliance', score: Math.max(40, Math.min(90, score)),
-                        freeFindings: [
-                            isOnePage ? "Resume appears to be a reasonable length." : "Resume may be longer than the recommended one page for most roles.",
-                            "Standard fonts and clear headers are used, which is good for ATS."
-                        ],
-                        quickTip: "Ensure your resume is saved and uploaded as a PDF. Use standard fonts like Inter, Arial, or Calibri (size 10-12pt) and avoid graphics, tables, or columns which can confuse ATS.",
-                        lockedContent: {
-                            detailedTips: ["Use consistent formatting for all section headers (e.g., all caps, bold).", "Maintain adequate white space and margins (0.5 to 1 inch) to avoid a cluttered look.", "Proofread meticulously for any spelling or grammar errors. Use a tool like Grammarly."],
-                            examples: [{
-                                before: "A resume with inconsistent heading sizes, multiple columns, and a mix of fonts.",
-                                after: "A clean, single-column resume with consistent H1/H2 style headings, uniform date formats (e.g., 'Jan 2023 – Present'), and ample white space."
-                            }],
-                            explanation: "Clean, consistent formatting is crucial. ATS (Applicant Tracking Systems) parse resumes like a machine, and complex layouts can cause your information to be read incorrectly or skipped entirely."
-                        }
-                    };
+            **JSON Schema to Follow:**
+            {
+              "overallScore": 0,
+              "overallSummary": "",
+              "topFixes": [ { "id": "fix1", "title": "", "hint": "", "score": 0, "sectionId": "" } ],
+              "sections": [
+                {
+                  "id": "experience", "title": "Experience", "score": 0,
+                  "freeFindings": [], "quickTip": "",
+                  "quantification": { "count": 0, "total": 0, "percentage": 0 },
+                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
+                },
+                {
+                  "id": "skills", "title": "Skills", "score": 0,
+                  "freeFindings": [], "quickTip": "",
+                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
+                },
+                {
+                  "id": "formatting", "title": "Formatting & ATS Compliance", "score": 0,
+                  "freeFindings": [], "quickTip": "",
+                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
+                }
+              ]
+            }
+
+            **Resume Text to Analyze:**
+            ---
+            ${resumeText}
+            ---
+            `;
+            
+            try {
+                // The endpoint for your Netlify Function
+                const response = await fetch('/.netlify/functions/call-gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: systemPrompt }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
 
-                const expReport = analyzeExperience();
-                const skillsReport = analyzeSkills();
-                const formatReport = analyzeFormatting();
-                report.sections = [expReport, skillsReport, formatReport];
-                
-                const totalScore = report.sections.reduce((acc, s) => acc + s.score, 0);
-                report.overallScore = Math.round(totalScore / report.sections.length);
-                report.overallSummary = `Your resume has a decent foundation but needs key improvements in impact quantification and ATS keyword optimization to stand out.`;
-                
-                report.topFixes = [
-                    { id: 'fix1', title: 'Quantify Impact', hint: 'Add numbers to show results', score: Math.round(expReport.quantification.percentage / 10), sectionId: 'experience' },
-                    { id: 'fix2', title: 'Categorize Skills', hint: 'Group skills for readability', score: Math.round(skillsReport.score / 10) - 2, sectionId: 'skills' },
-                    { id: 'fix3', title: 'Improve ATS Compliance', hint: 'Check for formatting errors', score: Math.round(formatReport.score / 10), sectionId: 'formatting' },
-                ].sort((a, b) => a.score - b.score);
-
+                // Because our function now returns clean JSON, we can use it directly
+                const report = await response.json(); 
+                console.log("Received report from Netlify function:", report);
                 return report;
-            };
 
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const report = generateMockReport(resumeText);
-                    resolve(report);
-                }, 1500);
-            });
+            } catch (error) {
+                console.error("Failed to fetch analysis from Netlify function:", error);
+                return null;
+            }
         };
 
         // --- ASSETS & ICONS ---
@@ -1128,4 +1065,3 @@
     </script>
 </body>
 </html>
-
