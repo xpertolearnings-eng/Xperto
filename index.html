@@ -141,7 +141,6 @@
         const callGeminiAPI = async (resumeText) => {
             console.log("Calling Netlify Function for real AI analysis...");
 
-            // **FIX**: Escaped backticks inside the template literal to fix the Babel parsing error.
             const systemPrompt = `
             You are an expert ATS-focused resume analyzer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided resume text.
 
@@ -229,9 +228,26 @@
                     throw new Error(`Network response was not ok: ${response.status}. ${errorText}`);
                 }
                 
-                const report = await response.json(); 
-                console.log("Received detailed report from Netlify function:", report);
-                return report;
+                // **FIX**: Implemented a more robust JSON parsing method to handle potential extra text from the API.
+                const responseText = await response.text();
+                try {
+                    // The API might return the JSON wrapped in markdown or with extra text.
+                    // We find the start and end of the JSON object to handle this.
+                    const startIndex = responseText.indexOf('{');
+                    const endIndex = responseText.lastIndexOf('}');
+                    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+                         throw new Error("Could not find a valid JSON object in the server response.");
+                    }
+                    const jsonString = responseText.substring(startIndex, endIndex + 1);
+                    const report = JSON.parse(jsonString); 
+                    console.log("Received and parsed detailed report from Netlify function:", report);
+                    return report;
+                } catch (e) {
+                    console.error("Failed to parse the JSON response from the server.", e);
+                    console.error("Raw response from server:", responseText);
+                    // Re-throw the error so it's caught by the outer catch block
+                    throw new Error("Invalid data format received from the server.");
+                }
 
             } catch (error) {
                 console.error("Failed to fetch analysis from Netlify function:", error);
