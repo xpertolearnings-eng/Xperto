@@ -145,13 +145,13 @@
             You are an expert ATS-focused resume analyzer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided resume text.
 
             **Core Directives:**
-            1.  **ATS First:** All advice must align with modern Applicant Tracking System (ATS) best practices (e.g., no graphics, standard fonts, keyword optimization, clear sections, quantifiable results).
-            2.  **Strict JSON Output:** Your entire response must be a single, valid JSON object that strictly adheres to the schema below.
+            1.  **ATS First:** All advice must align with modern Applicant Tracking System (ATS) best practices.
+            2.  **Strict JSON Output:** Your entire response MUST be a single, valid JSON object that strictly adheres to the schema below. There should be no extra text or characters outside the main JSON object.
             3.  **Content-Specific Analysis:** Every finding, score, and tip must be directly derived from the resume text provided. Do not give generic advice.
             4.  **Scoring & Color Logic:**
                 - Section/Overall Scores (0-100): 0-60 is poor, 61-90 is average, 91-100 is excellent.
                 - Badge Scores (0-10): A score of 10 represents the highest impact fix.
-            5.  **Practical & Measurable:** Frame examples in a practical way. For instance, transform "Managed sales" into "Increased quarterly sales by 15% by implementing a new CRM strategy."
+            5.  **Practical & Measurable:** Frame examples in a practical way. For instance, transform "Managed sales" into "Increased quarterly sales by 15%."
 
             **JSON Schema to Follow:**
             {
@@ -202,13 +202,13 @@
             }
 
             **Content Generation Rules:**
-            - **overallSummary:** Provide a 1-2 line concise summary of the resume's main strength and weakness.
-            - **topFixes:** Generate 4-6 high-impact fixes. The \`title\` should be a short action (e.g., "Quantify Achievements"). The \`hint\` should be a brief explanation. \`sectionId\` must match one of the section \`id\`s from the schema.
+            - **overallSummary:** Provide a 1-2 line concise summary.
+            - **topFixes:** Generate 4-6 high-impact fixes. \`sectionId\` must match a section \`id\` from the schema.
             - **sections:**
-                - Analyze each section (Summary, Experience, etc.). If a section doesn't exist in the resume, give it a low score and generate findings about its absence.
-                - **freeFindings:** List 2-3 short, bullet-point style findings on what is missing or weak in that section.
-                - **quickTips:** Provide exactly 3 actionable quick tips for immediate improvement in that section.
-                - **lockedContent:** This is for the paid report. Populate \`detailedTips\`, \`examples\` (with clear before/after), and a compelling \`explanation\` of why the changes are important.
+                - Analyze each section. If a section is missing from the resume, give it a low score and explain its importance.
+                - **freeFindings:** List 2-3 short, bullet-point findings.
+                - **quickTips:** Provide exactly 3 actionable quick tips.
+                - **lockedContent:** This object MUST contain three keys: \`detailedTips\` (array of strings), \`examples\` (array of objects), and \`explanation\` (string). Do not add any keys outside of this structure.
 
             **Resume Text to Analyze:**
             ---
@@ -236,12 +236,8 @@
                          throw new Error("Could not find a valid JSON object in the server response.");
                     }
                     
-                    // **FIX**: Cleaned up and simplified the JSON parsing logic. This sanitizes the most
-                    // common issue (unescaped newlines) from the AI response before parsing.
                     const jsonString = responseText.substring(startIndex, endIndex + 1);
-                    const sanitizedJsonString = jsonString.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
-
-                    const report = JSON.parse(sanitizedJsonString); 
+                    const report = JSON.parse(jsonString); 
                     console.log("Received and parsed detailed report from Netlify function:", report);
                     return report;
                 } catch (e) {
