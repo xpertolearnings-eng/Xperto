@@ -141,7 +141,7 @@
         const callGeminiAPI = async (resumeText) => {
             console.log("Calling Netlify Function for real AI analysis...");
 
-            // The detailed prompt is now constructed here in the frontend
+            // The detailed prompt is constructed here in the frontend to tell Gemini exactly how to behave.
             const systemPrompt = `
             You are an expert resume analyzer for a platform called Xperto. Analyze the provided resume text and return a structured JSON report. The analysis must be specific to the content provided, not generic.
 
@@ -183,7 +183,8 @@
             `;
             
             try {
-                // The endpoint for your Netlify Function
+                // **MODIFICATION**: This now points to the correct Netlify function endpoint.
+                // This relative path works for both local development (`netlify dev`) and production.
                 const response = await fetch('/.netlify/functions/call-gemini', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -198,14 +199,20 @@
                     throw new Error(`Network response was not ok: ${response.status}. ${errorText}`);
                 }
 
-                // Because our function now returns clean JSON, we can use it directly
+                // The serverless function returns clean JSON, so we can use it directly.
                 const report = await response.json(); 
                 console.log("Received report from Netlify function:", report);
                 return report;
 
             } catch (error) {
                 console.error("Failed to fetch analysis from Netlify function:", error);
-                return null;
+                // Fallback to a mock error report for UI testing if the API fails
+                return {
+                    overallScore: 0,
+                    overallSummary: "We couldn't analyze your resume at the moment. Please try again later.",
+                    topFixes: [],
+                    sections: []
+                };
             }
         };
 
@@ -613,7 +620,7 @@
 
             const getScoreColor = (score) => {
                 if (score <= 60) return '#ef4444'; // red-500
-                if (score <= 90) return '#facc15'; // yellow-400
+                if (score <= 80) return '#facc15'; // yellow-400
                 return '#4ade80'; // green-400
             };
             
@@ -638,6 +645,7 @@
                             textContent += text.items.map(s => s.str).join(' ');
                         }
                         setResumeText(textContent);
+                        showNotification('Resume loaded successfully!', 'success');
                     } catch (error) {
                         console.error("Error parsing PDF:", error);
                         showNotification('Could not read the PDF file.', 'error');
@@ -657,9 +665,12 @@
                 const result = await callGeminiAPI(resumeText);
                 setLoading(false);
 
-                if (result) {
+                if (result && result.overallScore > 0) {
                     setReport(result);
-                    setActiveView({ type: 'top_fixes', id: result.topFixes[0].sectionId });
+                    // Set the initial view to the first top fix, if it exists
+                    if (result.topFixes && result.topFixes.length > 0) {
+                        setActiveView({ type: 'top_fixes', id: result.topFixes[0].sectionId });
+                    }
                     showNotification('Free analysis complete!', 'success');
                 } else {
                     showNotification('Analysis failed. Please try again.', 'error');
@@ -696,7 +707,7 @@
 
             const BadgeScore = ({ score }) => {
                 const color = getScoreColor(score * 10);
-                return <div className="w-8 h-8 flex items-center justify-center rounded-md font-bold text-lg text-white" style={{backgroundColor: color}}>{score}</div>
+                return <div className="w-8 h-8 flex items-center justify-center rounded-md font-bold text-lg text-white flex-shrink-0" style={{backgroundColor: color}}>{score}</div>
             };
             
             const LockedContent = ({ onUnlock }) => (
@@ -723,6 +734,8 @@
             );
 
             const MainContentPane = () => {
+                if (!activeView.id) return <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 text-center"><p className="text-gray-400">Select an item from the sidebar to see details.</p></div>;
+
                 const section = report.sections.find(s => s.id === activeView.id);
                 if (!section) return null;
 
@@ -738,7 +751,7 @@
                                 <div className="border-t border-gray-700 pt-6">
                                      <h3 className="text-lg font-semibold text-white">Key Findings</h3>
                                       <ul className="mt-3 space-y-2">
-                                          {section.freeFindings.slice(0, 2).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                          {(section.freeFindings || []).slice(0, 2).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
                                       </ul>
                                 </div>
                                 
@@ -773,11 +786,11 @@
                                 <div className="mt-6 border-b border-gray-700 pb-6">
                                     <h3 className="text-lg font-semibold text-white">Free Findings</h3>
                                     <ul className="mt-3 space-y-2">
-                                        {section.freeFindings.map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                        {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
                                     </ul>
                                 </div>
                                 
-                                {isReportUnlocked ? (
+                                {isReportUnlocked && section.lockedContent ? (
                                     <div className="mt-8 space-y-8 animate-fade-in">
                                         <div>
                                             <h3 className="text-xl font-bold text-green-400">Detailed Improvements</h3>
@@ -831,7 +844,7 @@
                                         <input id="resume-upload" type="file" accept=".pdf" onChange={handleFileChange} className="hidden"/>
                                     </div>
                                     {file && <p className="mt-4 text-sm text-center text-gray-400">Selected: <span className="font-semibold text-gray-200">{file.name}</span></p>}
-                                    <button onClick={handleAnalyze} disabled={loading || !file} className="mt-6 w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed">
+                                    <button onClick={handleAnalyze} disabled={loading || !file} className="mt-6 w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-transform duration-200 disabled:transform-none hover:scale-105">
                                         {loading ? 'Analyzing...' : 'Grade My Resume'}
                                     </button>
                                 </Card>
@@ -850,13 +863,13 @@
                                     
                                     <h3 className="font-semibold text-gray-200 mt-6 mb-3">Top 3 Fixes</h3>
                                     <div className="space-y-2">
-                                        {report.topFixes.map(fix => (
+                                        {(report.topFixes || []).map(fix => (
                                             <button key={fix.id} onClick={() => setActiveView({ type: 'top_fixes', id: fix.sectionId })}
                                                 className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
                                                 <BadgeScore score={fix.score} />
-                                                <div className="ml-3 flex-grow">
-                                                    <p className="font-semibold text-gray-100">{fix.title}</p>
-                                                    <p className="text-xs text-gray-400">{fix.hint}</p>
+                                                <div className="ml-3 flex-grow overflow-hidden">
+                                                    <p className="font-semibold text-gray-100 truncate">{fix.title}</p>
+                                                    <p className="text-xs text-gray-400 truncate">{fix.hint}</p>
                                                 </div>
                                                 <ChevronRightIcon />
                                             </button>
@@ -867,7 +880,7 @@
                                     
                                     <h3 className="font-semibold text-gray-200 mb-3">Detailed Report</h3>
                                     <div className="space-y-2">
-                                        {report.sections.map(section => (
+                                        {(report.sections || []).map(section => (
                                             <button key={section.id} onClick={() => setActiveView({ type: 'section', id: section.id })}
                                                 className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'section' && activeView.id === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
                                                 <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
@@ -927,6 +940,7 @@
                 setSelectedJob(job);
                 setCoverLetter('');
                 setIsAiLoading(true);
+                // This is a mock API call, in a real app this would call Gemini.
                 setTimeout(() => {
                     setCoverLetter(`Dear Hiring Manager at ${job.company},\n\nI am writing to express my strong interest in the ${job.title} role I saw advertised on Xperto. With my experience in ${job.skill}, I am confident I can contribute effectively to your team.\n\nThank you for your time and consideration.\n\nSincerely,\nA Job Seeker`);
                     setIsAiLoading(false);
@@ -962,7 +976,7 @@
                             ) : (
                                 <>
                                     <textarea readOnly value={coverLetter} className="w-full h-64 p-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 text-sm whitespace-pre-wrap"></textarea>
-                                    <button onClick={() => { showNotification('Copied to clipboard!'); setSelectedJob(null); }} className="mt-4 w-full py-2 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400">Copy & Close</button>
+                                    <button onClick={() => { navigator.clipboard.writeText(coverLetter); showNotification('Copied to clipboard!'); setSelectedJob(null); }} className="mt-4 w-full py-2 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400">Copy & Close</button>
                                 </>
                             )}
                         </Modal>
@@ -1069,4 +1083,3 @@
     </script>
 </body>
 </html>
-
