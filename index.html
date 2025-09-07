@@ -141,40 +141,75 @@
         const callGeminiAPI = async (resumeText) => {
             console.log("Calling Netlify Function for real AI analysis...");
 
-            // The detailed prompt is constructed here in the frontend to tell Gemini exactly how to behave.
+            // **FIX**: Escaped backticks inside the template literal to fix the Babel parsing error.
             const systemPrompt = `
-            You are an expert resume analyzer for a platform called Xperto. Analyze the provided resume text and return a structured JSON report. The analysis must be specific to the content provided, not generic.
+            You are an expert ATS-focused resume analyzer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided resume text.
 
-            **Output Rules:**
-            1.  **JSON ONLY:** Your entire response MUST be a single, valid JSON object.
-            2.  **Match the Schema:** The JSON structure must strictly follow the schema.
-            3.  **Content-Specific:** All findings and scores must be derived directly from the provided resume text.
-            4.  **Scoring Logic:** Scores should be between 30 and 95. A score of 55 is average. Base scores on specific evidence (e.g., high 'Experience' score for quantified results).
+            **Core Directives:**
+            1.  **ATS First:** All advice must align with modern Applicant Tracking System (ATS) best practices (e.g., no graphics, standard fonts, keyword optimization, clear sections, quantifiable results).
+            2.  **Strict JSON Output:** Your entire response must be a single, valid JSON object that strictly adheres to the schema below.
+            3.  **Content-Specific Analysis:** Every finding, score, and tip must be directly derived from the resume text provided. Do not give generic advice.
+            4.  **Scoring & Color Logic:**
+                - Section/Overall Scores (0-100): 0-60 is poor, 61-90 is average, 91-100 is excellent.
+                - Badge Scores (0-10): A score of 10 represents the highest impact fix.
+            5.  **Practical & Measurable:** Frame examples in a practical way. For instance, transform "Managed sales" into "Increased quarterly sales by 15% by implementing a new CRM strategy."
 
             **JSON Schema to Follow:**
             {
               "overallScore": 0,
               "overallSummary": "",
-              "topFixes": [ { "id": "fix1", "title": "", "hint": "", "score": 0, "sectionId": "" } ],
+              "topFixes": [
+                { "id": "fix1", "title": "", "hint": "", "score": 0, "sectionId": "" }
+              ],
               "sections": [
                 {
+                  "id": "summary", "title": "Summary", "score": 0,
+                  "freeFindings": [],
+                  "quickTips": [],
+                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
+                },
+                {
                   "id": "experience", "title": "Experience", "score": 0,
-                  "freeFindings": [], "quickTip": "",
+                  "freeFindings": [],
+                  "quickTips": [],
                   "quantification": { "count": 0, "total": 0, "percentage": 0 },
                   "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
                 },
                 {
                   "id": "skills", "title": "Skills", "score": 0,
-                  "freeFindings": [], "quickTip": "",
+                  "freeFindings": [],
+                  "quickTips": [],
                   "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
                 },
                 {
-                  "id": "formatting", "title": "Formatting & ATS Compliance", "score": 0,
-                  "freeFindings": [], "quickTip": "",
+                  "id": "projects", "title": "Projects", "score": 0,
+                  "freeFindings": [],
+                  "quickTips": [],
+                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
+                },
+                {
+                  "id": "education", "title": "Education", "score": 0,
+                  "freeFindings": [],
+                  "quickTips": [],
+                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
+                },
+                {
+                  "id": "other", "title": "Achievements/Other", "score": 0,
+                  "freeFindings": [],
+                  "quickTips": [],
                   "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
                 }
               ]
             }
+
+            **Content Generation Rules:**
+            - **overallSummary:** Provide a 1-2 line concise summary of the resume's main strength and weakness.
+            - **topFixes:** Generate 4-6 high-impact fixes. The \`title\` should be a short action (e.g., "Quantify Achievements"). The \`hint\` should be a brief explanation. \`sectionId\` must match one of the section \`id\`s from the schema.
+            - **sections:**
+                - Analyze each section (Summary, Experience, etc.). If a section doesn't exist in the resume, give it a low score and generate findings about its absence.
+                - **freeFindings:** List 2-3 short, bullet-point style findings on what is missing or weak in that section.
+                - **quickTips:** Provide exactly 3 actionable quick tips for immediate improvement in that section.
+                - **lockedContent:** This is for the paid report. Populate \`detailedTips\`, \`examples\` (with clear before/after), and a compelling \`explanation\` of why the changes are important.
 
             **Resume Text to Analyze:**
             ---
@@ -183,8 +218,6 @@
             `;
             
             try {
-                // **MODIFICATION**: This now points to the correct Netlify function endpoint.
-                // This relative path works for both local development (`netlify dev`) and production.
                 const response = await fetch('/.netlify/functions/call-gemini', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -192,27 +225,17 @@
                 });
 
                 if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('Function not found. Ensure you are running this with `netlify dev` or that it has been deployed correctly.');
-                    }
                     const errorText = await response.text();
                     throw new Error(`Network response was not ok: ${response.status}. ${errorText}`);
                 }
-
-                // The serverless function returns clean JSON, so we can use it directly.
+                
                 const report = await response.json(); 
-                console.log("Received report from Netlify function:", report);
+                console.log("Received detailed report from Netlify function:", report);
                 return report;
 
             } catch (error) {
                 console.error("Failed to fetch analysis from Netlify function:", error);
-                // Fallback to a mock error report for UI testing if the API fails
-                return {
-                    overallScore: 0,
-                    overallSummary: "We couldn't analyze your resume at the moment. Please try again later.",
-                    topFixes: [],
-                    sections: []
-                };
+                return null;
             }
         };
 
@@ -618,10 +641,11 @@
             const [loading, setLoading] = React.useState(false);
             const [activeView, setActiveView] = React.useState({ type: 'top_fixes', id: null });
 
+            // **MODIFICATION**: Updated color logic to match new requirements
             const getScoreColor = (score) => {
-                if (score <= 60) return '#ef4444'; // red-500
-                if (score <= 80) return '#facc15'; // yellow-400
-                return '#4ade80'; // green-400
+                if (score <= 60) return '#ef4444'; // Red
+                if (score <= 90) return '#facc15'; // Yellow
+                return '#4ade80'; // Green
             };
             
             const handleFileChange = async (e) => {
@@ -665,9 +689,8 @@
                 const result = await callGeminiAPI(resumeText);
                 setLoading(false);
 
-                if (result && result.overallScore > 0) {
+                if (result) {
                     setReport(result);
-                    // Set the initial view to the first top fix, if it exists
                     if (result.topFixes && result.topFixes.length > 0) {
                         setActiveView({ type: 'top_fixes', id: result.topFixes[0].sectionId });
                     }
@@ -733,6 +756,7 @@
                 </div>
             );
 
+            // **MODIFICATION**: This component is heavily updated to render the new detailed report structure.
             const MainContentPane = () => {
                 if (!activeView.id) return <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 text-center"><p className="text-gray-400">Select an item from the sidebar to see details.</p></div>;
 
@@ -746,34 +770,29 @@
                         {activeView.type === 'top_fixes' && topFixForSection ? (
                             <>
                                 <h2 className="text-2xl font-bold text-white mb-1">Top Fix: <span className="text-[#00C853]">{topFixForSection.title}</span></h2>
-                                <p className="text-gray-400 mb-6">Here's the highest-impact change you can make to your resume right now.</p>
+                                <p className="text-gray-400 mb-6">This is one of the highest-impact changes you can make to the <span className="font-semibold text-gray-300">{section.title}</span> section.</p>
                                 
                                 <div className="border-t border-gray-700 pt-6">
                                      <h3 className="text-lg font-semibold text-white">Key Findings</h3>
                                       <ul className="mt-3 space-y-2">
-                                          {(section.freeFindings || []).slice(0, 2).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                          {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
                                       </ul>
                                 </div>
                                 
-                                {section.id === 'experience' && section.quantification && (
-                                    <div className="mt-6 p-4 bg-gray-800 rounded-lg">
-                                        <div className="flex justify-between items-center text-sm font-semibold mb-2">
-                                            <span className="text-gray-300">Quantified Bullets</span>
-                                            <span className="text-white">{section.quantification.count} / {section.quantification.total}</span>
-                                        </div>
-                                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                                            <div className="bg-[#00C853] h-2.5 rounded-full" style={{width: `${section.quantification.percentage}%`}}></div>
-                                        </div>
-                                        <p className="text-center text-xs text-gray-400 mt-2">{section.quantification.percentage}% of your experience points show measurable impact.</p>
-                                    </div>
-                                )}
-                                
                                 <div className="mt-6">
-                                    <h3 className="text-lg font-semibold text-white">Free Quick Fix</h3>
-                                    <p className="mt-2 text-sm text-gray-300 bg-green-900/50 p-4 rounded-lg border border-green-500/30">{section.quickTip}</p>
+                                    <h3 className="text-lg font-semibold text-white">Free Quick Fixes</h3>
+                                    <ul className="mt-3 space-y-2">
+                                        {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{tip}</li>)}
+                                    </ul>
                                 </div>
 
-                                <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                                {isReportUnlocked ? (
+                                    <div className="mt-8 space-y-8 animate-fade-in">
+                                        {/* Unlocked content rendered here */}
+                                    </div>
+                                ) : (
+                                    <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                                )}
                             </>
                         ) : (
                              <>
@@ -787,6 +806,12 @@
                                     <h3 className="text-lg font-semibold text-white">Free Findings</h3>
                                     <ul className="mt-3 space-y-2">
                                         {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{finding}</li>)}
+                                    </ul>
+                                </div>
+                                 <div className="mt-6">
+                                    <h3 className="text-lg font-semibold text-white">Free Quick Fixes</h3>
+                                    <ul className="mt-3 space-y-2">
+                                        {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon />{tip}</li>)}
                                     </ul>
                                 </div>
                                 
@@ -861,7 +886,7 @@
                                         <p className="mt-3 text-center text-sm text-gray-400">{report.overallSummary}</p>
                                     </div>
                                     
-                                    <h3 className="font-semibold text-gray-200 mt-6 mb-3">Top 3 Fixes</h3>
+                                    <h3 className="font-semibold text-gray-200 mt-6 mb-3">Top Fixes</h3>
                                     <div className="space-y-2">
                                         {(report.topFixes || []).map(fix => (
                                             <button key={fix.id} onClick={() => setActiveView({ type: 'top_fixes', id: fix.sectionId })}
@@ -1083,3 +1108,4 @@
     </script>
 </body>
 </html>
+
