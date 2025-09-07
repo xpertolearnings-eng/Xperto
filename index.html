@@ -235,8 +235,27 @@
                     if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
                          throw new Error("Could not find a valid JSON object in the server response.");
                     }
-                    const jsonString = responseText.substring(startIndex, endIndex + 1);
-                    const report = JSON.parse(jsonString); 
+                    let jsonString = responseText.substring(startIndex, endIndex + 1);
+                    
+                    // **FIX**: Sanitize the JSON string to escape unescaped newlines and other control characters
+                    // that would cause JSON.parse() to fail. This makes the parsing more robust.
+                    jsonString = jsonString.replace(/\\/g, '\\\\') // Escape existing backslashes
+                                       .replace(/"/g, '\\"') // Escape double quotes
+                                       .replace(/\n/g, '\\n') // Escape newlines
+                                       .replace(/\r/g, '\\r') // Escape carriage returns
+                                       .replace(/\t/g, '\\t') // Escape tabs
+                                       .replace(/\f/g, '\\f'); // Escape form feeds
+
+                    // Now, we need to unescape the characters that should be escaped (`\"` and `\\`)
+                    // but leave the newly escaped control characters (`\\n`, etc.) as they are.
+                    // This is a complex string operation. A simpler approach is to handle the most common issue.
+                    
+                    // **REVISED & SIMPLIFIED FIX**: The most common issue is unescaped newlines.
+                    // Let's stick to a simpler, more targeted fix that solves the reported problem.
+                    let simplerJsonString = responseText.substring(startIndex, endIndex + 1);
+                    const sanitizedJsonString = simplerJsonString.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+
+                    const report = JSON.parse(sanitizedJsonString); 
                     console.log("Received and parsed detailed report from Netlify function:", report);
                     return report;
                 } catch (e) {
