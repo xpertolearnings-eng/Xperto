@@ -1,7 +1,7 @@
 // netlify/functions/call-gemini.js
 
-// Using 'node-fetch' for compatibility in Node.js environments
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+// The 'node-fetch' import has been removed.
+// Netlify functions run on Node.js 18+, which has fetch built-in globally.
 
 exports.handler = async function(event) {
     // Only allow POST requests
@@ -29,6 +29,7 @@ exports.handler = async function(event) {
             },
         };
 
+        // We can now use the native 'fetch' provided by the environment
         const geminiResponse = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -69,3 +70,4 @@ exports.handler = async function(event) {
         };
     }
 };
+
