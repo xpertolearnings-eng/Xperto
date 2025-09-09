@@ -305,7 +305,8 @@
 
         const LockIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
         const CheckIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>);
-        const ChevronRightIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>);
+        const ChevronRightIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className || "h-4 w-4 text-gray-500"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>);
+        const ChevronDownIcon = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className || "h-5 w-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>);
 
 
         // --- CONTEXT API for State Management ---
@@ -653,6 +654,8 @@
             const [isReportUnlocked, setIsReportUnlocked] = React.useState(false);
             const [loading, setLoading] = React.useState(false);
             const [activeView, setActiveView] = React.useState({ type: 'top_fixes', id: null });
+            const [openAccordionId, setOpenAccordionId] = React.useState(null);
+
 
             const getScoreColor = (score) => {
                 if (score <= 60) return '#ef4444'; // Red
@@ -668,6 +671,7 @@
                 setReport(null);
                 setIsReportUnlocked(false);
                 setActiveView({ type: 'top_fixes', id: null });
+                setOpenAccordionId(null);
 
                 const reader = new FileReader();
                 reader.onload = async (event) => {
@@ -698,13 +702,16 @@
                 }
                 setLoading(true);
                 setReport(null);
+                setOpenAccordionId(null);
                 const result = await callGeminiAPI(resumeText);
                 setLoading(false);
 
                 if (result) {
                     setReport(result);
                     if (result.topFixes && result.topFixes.length > 0) {
-                        setActiveView({ type: 'top_fixes', id: result.topFixes[0].sectionId });
+                        const firstFix = result.topFixes[0];
+                        setActiveView({ type: 'top_fixes', id: firstFix.sectionId });
+                        setOpenAccordionId(firstFix.id); // Set first fix to be open on mobile
                     }
                     showNotification('Free analysis complete!', 'success');
                 } else {
@@ -767,6 +774,62 @@
                     </div>
                 </div>
             );
+
+             const AccordionContent = ({ section, isReportUnlocked, onUnlock, topFix }) => {
+                if (!section) return null;
+                return (
+                    <div className="lg:hidden p-4 bg-gray-800/50 animate-fade-in border-t border-gray-700">
+                        {topFix ? (
+                            <div className="mb-4">
+                                <h2 className="text-lg font-bold text-white mb-1 break-words">Top Fix: <span className="text-[#00C853]">{topFix.title}</span></h2>
+                                <p className="text-gray-400 text-sm break-words">{topFix.hint}</p>
+                            </div>
+                        ) : (
+                            <h2 className="text-lg font-bold text-white mb-4 break-words">{section.title}</h2>
+                        )}
+                        
+                        <div className="border-t border-gray-700 pt-4">
+                            <h3 className="text-md font-semibold text-white">Key Findings</h3>
+                            <ul className="mt-2 space-y-1.5">
+                                {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-sm text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{finding}</span></li>)}
+                            </ul>
+                        </div>
+                        
+                        <div className="mt-4">
+                            <h3 className="text-md font-semibold text-white">Free Quick Fixes</h3>
+                            <ul className="mt-2 space-y-1.5">
+                                {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-sm text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{tip}</span></li>)}
+                            </ul>
+                        </div>
+
+                        {isReportUnlocked && section.lockedContent ? (
+                            <div className="mt-6 space-y-6">
+                                <div>
+                                    <h3 className="text-md font-bold text-green-400">Detailed Improvements</h3>
+                                    <ul className="mt-2 list-disc list-inside text-gray-300 text-sm space-y-1.5 break-words">
+                                        {section.lockedContent.detailedTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="text-md font-bold text-green-400">Rewritten Examples</h3>
+                                    <div className="mt-2 space-y-3">
+                                        {section.lockedContent.examples.map((ex, i) => (
+                                            <div key={i} className="p-3 border border-gray-700 rounded-lg">
+                                                <p className="text-xs font-semibold text-red-400">Before:</p>
+                                                <p className="text-xs text-gray-400 italic pl-3 border-l-2 border-red-500/50 ml-1 py-1 break-words">"{ex.before}"</p>
+                                                <p className="text-xs font-semibold text-green-400 mt-2">After:</p>
+                                                <p className="text-xs text-gray-200 pl-3 border-l-2 border-green-500/50 ml-1 py-1 whitespace-pre-wrap break-words">{ex.after}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <LockedContent onUnlock={onUnlock} />
+                        )}
+                    </div>
+                );
+            };
 
             const MainContentPane = () => {
                 if (!activeView.id) return <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 text-center"><p className="text-gray-400">Select an item from the sidebar to see details.</p></div>;
@@ -899,35 +962,69 @@
                                     
                                     <h3 className="font-semibold text-gray-200 mt-6 mb-3">Top Fixes</h3>
                                     <div className="space-y-2">
-                                        {(report.topFixes || []).map(fix => (
-                                            <button key={fix.id} onClick={() => setActiveView({ type: 'top_fixes', id: fix.sectionId })}
-                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
-                                                <BadgeScore score={fix.score} />
-                                                <div className="ml-3 flex-grow overflow-hidden min-w-0">
-                                                    <p className="font-semibold text-gray-100 truncate">{fix.title}</p>
-                                                    <p className="text-xs text-gray-400 truncate">{fix.hint}</p>
+                                        {(report.topFixes || []).map(fix => {
+                                            const section = report.sections.find(s => s.id === fix.sectionId);
+                                            const isAccordionOpen = openAccordionId === fix.id;
+                                            return (
+                                                <div key={fix.id} className={`rounded-lg overflow-hidden transition-colors duration-200 ${isAccordionOpen ? 'bg-gray-800' : 'bg-transparent'}`}>
+                                                    <button onClick={() => {
+                                                                setActiveView({ type: 'top_fixes', id: fix.sectionId });
+                                                                setOpenAccordionId(isAccordionOpen ? null : fix.id);
+                                                            }}
+                                                        className={`w-full text-left p-3 flex items-center border-2 transition-colors ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `border-green-500 lg:bg-gray-800` : 'border-transparent'} ${isAccordionOpen ? 'lg:bg-transparent' : ''} hover:bg-gray-800/50`}>
+                                                        <BadgeScore score={fix.score} />
+                                                        <div className="ml-3 flex-grow overflow-hidden min-w-0">
+                                                            <p className="font-semibold text-gray-100 truncate">{fix.title}</p>
+                                                            <p className="text-xs text-gray-400 truncate">{fix.hint}</p>
+                                                        </div>
+                                                        <ChevronRightIcon className="h-4 w-4 text-gray-500 hidden lg:block" />
+                                                        <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform duration-300 lg:hidden ${isAccordionOpen ? 'transform rotate-180' : ''}`} />
+                                                    </button>
+                                                    {isAccordionOpen && section && (
+                                                        <AccordionContent 
+                                                            section={section} 
+                                                            isReportUnlocked={isReportUnlocked} 
+                                                            onUnlock={() => setIsReportUnlocked(true)}
+                                                            topFix={fix}
+                                                        />
+                                                    )}
                                                 </div>
-                                                <ChevronRightIcon />
-                                            </button>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                     
                                     <div className="border-t border-gray-700 my-4"></div>
                                     
                                     <h3 className="font-semibold text-gray-200 mb-3">Detailed Report</h3>
                                     <div className="space-y-2">
-                                        {(report.sections || []).map(section => (
-                                            <button key={section.id} onClick={() => setActiveView({ type: 'section', id: section.id })}
-                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'section' && activeView.id === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
-                                                <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
-                                                <div className={`font-bold text-lg`} style={{color: getScoreColor(section.score)}}>{section.score}</div>
-                                            </button>
-                                        ))}
+                                        {(report.sections || []).map(section => {
+                                            const isAccordionOpen = openAccordionId === section.id;
+                                            return (
+                                                <div key={section.id} className={`rounded-lg overflow-hidden transition-colors duration-200 ${isAccordionOpen ? 'bg-gray-800' : 'bg-transparent'}`}>
+                                                    <button onClick={() => {
+                                                                setActiveView({ type: 'section', id: section.id });
+                                                                setOpenAccordionId(isAccordionOpen ? null : section.id);
+                                                            }}
+                                                        className={`w-full text-left p-3 flex items-center border-2 transition-colors ${activeView.type === 'section' && activeView.id === section.id ? `border-green-500 lg:bg-gray-800` : 'border-transparent'} ${isAccordionOpen ? 'lg:bg-transparent' : ''} hover:bg-gray-800/50`}>
+                                                        <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
+                                                        <div className={`font-bold text-lg mr-3`} style={{color: getScoreColor(section.score)}}>{section.score}</div>
+                                                        <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform duration-300 lg:hidden ${isAccordionOpen ? 'transform rotate-180' : ''}`} />
+                                                    </button>
+                                                     {isAccordionOpen && (
+                                                        <AccordionContent 
+                                                            section={section} 
+                                                            isReportUnlocked={isReportUnlocked} 
+                                                            onUnlock={() => setIsReportUnlocked(true)}
+                                                        />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </aside>
 
-                            <main className="lg:col-span-8 xl:col-span-9">
+                            <main className="hidden lg:block lg:col-span-8 xl:col-span-9">
                                 {activeView.id && <MainContentPane />}
                             </main>
                         </div>
