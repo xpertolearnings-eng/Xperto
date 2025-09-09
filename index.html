@@ -136,88 +136,31 @@
             { name: 'Nykaa', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#fc2779">Nykaa</text></svg> },
             { name: 'Groww', logo: <svg viewBox="0 0 215 80"><text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="40" fontWeight="bold" fill="#00d09c">Groww</text></svg> },
         ];
-        
-        // --- [UPGRADED] CALL TO NETLIFY FUNCTION FOR RESUME ANALYSIS ---
-        const callGeminiAPI = async (resumeText) => {
-            console.log("Calling Netlify Function for real AI analysis...");
 
-            const systemPrompt = `
-            You are an expert ATS-focused resume analyzer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided resume text.
-
-            **Core Directives:**
-            1.  **ATS First:** All advice must align with modern Applicant Tracking System (ATS) best practices.
-            2.  **Strict JSON Output:** Your entire response MUST be a single, valid JSON object that strictly adheres to the schema below. There should be no extra text or characters outside the main JSON object.
-            3.  **Content-Specific Analysis:** Every finding, score, and tip must be directly derived from the resume text provided. Do not give generic advice.
-            4.  **Scoring & Color Logic:**
-                - Section/Overall Scores (0-100): 0-60 is poor, 61-90 is average, 91-100 is excellent.
-                - Badge Scores (0-10): A score of 10 represents the highest impact fix.
-            5.  **Practical & Measurable:** Frame examples in a practical way. For instance, transform "Managed sales" into "Increased quarterly sales by 15%."
-
-            **JSON Schema to Follow:**
-            {
-              "overallScore": 0,
-              "overallSummary": "",
-              "topFixes": [
-                { "id": "fix1", "title": "", "hint": "", "score": 0, "sectionId": "" }
-              ],
-              "sections": [
-                {
-                  "id": "summary", "title": "Summary", "score": 0,
-                  "freeFindings": [],
-                  "quickTips": [],
-                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
-                },
-                {
-                  "id": "experience", "title": "Experience", "score": 0,
-                  "freeFindings": [],
-                  "quickTips": [],
-                  "quantification": { "count": 0, "total": 0, "percentage": 0 },
-                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
-                },
-                {
-                  "id": "skills", "title": "Skills", "score": 0,
-                  "freeFindings": [],
-                  "quickTips": [],
-                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
-                },
-                {
-                  "id": "projects", "title": "Projects", "score": 0,
-                  "freeFindings": [],
-                  "quickTips": [],
-                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
-                },
-                {
-                  "id": "education", "title": "Education", "score": 0,
-                  "freeFindings": [],
-                  "quickTips": [],
-                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
-                },
-                {
-                  "id": "other", "title": "Achievements/Other", "score": 0,
-                  "freeFindings": [],
-                  "quickTips": [],
-                  "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }
-                }
-              ]
+        // --- GEMINI API CALL HELPERS ---
+        const parseGeminiResponse = (responseText) => {
+            let jsonString = responseText.trim();
+            if (jsonString.startsWith('```json')) {
+                jsonString = jsonString.substring(7, jsonString.length - 3).trim();
+            } else if (jsonString.startsWith('```')) {
+                jsonString = jsonString.substring(3, jsonString.length - 3).trim();
             }
 
-            **Content Generation Rules:**
-            - **overallSummary:** Provide a 1-2 line concise summary.
-            - **topFixes:** Generate 4-6 high-impact fixes. \`sectionId\` must match a section \`id\` from the schema.
-            - **sections:**
-                - Analyze each section. If a section is missing from the resume, give it a low score and explain its importance.
-                - **freeFindings:** List 2-3 short, bullet-point findings.
-                - **quickTips:** Provide exactly 3 actionable quick tips.
-                - **lockedContent:** This object MUST contain three keys: \`detailedTips\` (array of strings), \`examples\` (array of objects), and \`explanation\` (string). Do not add any keys outside of this structure.
-
-            **Resume Text to Analyze:**
-            ---
-            ${resumeText}
-            ---
-            `;
+            const startIndex = jsonString.indexOf('{');
+            const endIndex = jsonString.lastIndexOf('}');
+            if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+                 throw new Error("Could not find a valid JSON object in the server response.");
+            }
             
+            const finalJsonString = jsonString.substring(startIndex, endIndex + 1);
+            return JSON.parse(finalJsonString); 
+        };
+        
+        const callGeminiAPI = async (systemPrompt) => {
             try {
-                const response = await fetch('/.netlify/functions/call-gemini', {
+                // Construct the full URL for the Netlify function
+                const url = window.location.origin + '/.netlify/functions/call-gemini';
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: systemPrompt }),
@@ -230,24 +173,7 @@
                 
                 const responseText = await response.text();
                 try {
-                    // More robust JSON parsing to handle potential markdown wrappers from the API
-                    let jsonString = responseText.trim();
-
-                    if (jsonString.startsWith('```json')) {
-                        jsonString = jsonString.substring(7, jsonString.length - 3).trim();
-                    } else if (jsonString.startsWith('```')) {
-                        jsonString = jsonString.substring(3, jsonString.length - 3).trim();
-                    }
-
-                    // Ensure we are parsing a valid object
-                    const startIndex = jsonString.indexOf('{');
-                    const endIndex = jsonString.lastIndexOf('}');
-                    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-                         throw new Error("Could not find a valid JSON object in the server response.");
-                    }
-                    
-                    const finalJsonString = jsonString.substring(startIndex, endIndex + 1);
-                    const report = JSON.parse(finalJsonString); 
+                    const report = parseGeminiResponse(responseText);
                     console.log("Received and parsed detailed report from Netlify function:", report);
                     return report;
                 } catch (e) {
@@ -260,6 +186,53 @@
                 console.error("Failed to fetch analysis from Netlify function:", error);
                 return null;
             }
+        };
+
+        const callResumeGeminiAPI = (resumeText) => {
+            console.log("Calling Netlify Function for RESUME analysis...");
+            const systemPrompt = `
+            You are an expert ATS-focused resume analyzer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided resume text.
+            **Core Directives:**
+            1.  **ATS First:** All advice must align with modern Applicant Tracking System (ATS) best practices.
+            2.  **Strict JSON Output:** Your entire response MUST be a single, valid JSON object that strictly adheres to the schema below.
+            3.  **Content-Specific Analysis:** Every finding, score, and tip must be directly derived from the resume text provided.
+            **JSON Schema to Follow:**
+            {
+              "overallScore": 0, "overallSummary": "", "topFixes": [{ "id": "", "title": "", "hint": "", "score": 0, "sectionId": "" }],
+              "sections": [
+                { "id": "summary", "title": "Summary", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "experience", "title": "Experience", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "skills", "title": "Skills", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "projects", "title": "Projects", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "education", "title": "Education", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "other", "title": "Achievements/Other", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }}
+              ]
+            }
+            **Resume Text to Analyze:** --- ${resumeText} ---`;
+            return callGeminiAPI(systemPrompt);
+        };
+        
+        const callLinkedInGeminiAPI = (profileUrl) => {
+            console.log("Calling Netlify Function for LINKEDIN analysis...");
+            const systemPrompt = `
+            You are an expert LinkedIn profile optimizer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided LinkedIn profile URL. You must analyze the profile based on common knowledge of what makes a strong LinkedIn presence.
+            **Core Directives:**
+            1.  **Recruiter Focus:** All advice must be geared towards making the profile attractive to recruiters and hiring managers.
+            2.  **Strict JSON Output:** Your entire response MUST be a single, valid JSON object that strictly adheres to the schema below.
+            3.  **Actionable Advice:** Every tip and example must be practical and easy for a student or early-career professional to implement.
+            **JSON Schema to Follow:**
+            {
+              "overallScore": 0, "overallSummary": "", "topFixes": [{ "id": "", "title": "", "hint": "", "score": 0, "sectionId": "" }],
+              "sections": [
+                { "id": "profile_picture", "title": "Profile Picture & Banner", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "headline", "title": "Headline", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "about", "title": "About Section", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "experience", "title": "Experience Section", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
+                { "id": "skills", "title": "Skills & Endorsements", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }}
+              ]
+            }
+            **LinkedIn Profile URL to Analyze:** --- ${profileUrl} ---`;
+            return callGeminiAPI(systemPrompt);
         };
 
         // --- ASSETS & ICONS ---
@@ -355,7 +328,7 @@
             const navItems = [
                 { id: 'home', label: 'Home' },
                 { id: 'courses', label: 'Courses' },
-                { id: 'resume', label: 'Resume AI' },
+                { id: 'analyzer', label: 'AI Analyzer' },
                 { id: 'freelance', label: 'Find Internships' },
             ];
             
@@ -426,7 +399,7 @@
                             <h3 className="font-semibold mb-4">Navigate</h3>
                             <ul className="space-y-2 text-gray-400 text-sm">
                                 <li><a href="#" className="hover:text-[#00C853]">Courses</a></li>
-                                <li><a href="#" className="hover:text-[#00C853]">Resume AI</a></li>
+                                <li><a href="#" className="hover:text-[#00C853]">AI Analyzer</a></li>
                                 <li><a href="#" className="hover:text-[#00C853]">Find Internships</a></li>
                             </ul>
                         </div>
@@ -524,8 +497,8 @@
                                 <button onClick={() => setPage('courses')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transform hover:scale-105 transition-all duration-300">
                                     Explore Courses
                                 </button>
-                                <button onClick={() => setPage('resume')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-sm hover:bg-gray-700 hover:border-gray-600 transform hover:scale-105 transition-all duration-300">
-                                    Optimize My Resume
+                                <button onClick={() => setPage('analyzer')} className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-gray-200 bg-gray-800 border border-gray-700 rounded-lg shadow-sm hover:bg-gray-700 hover:border-gray-600 transform hover:scale-105 transition-all duration-300">
+                                    Analyze My Profile
                                 </button>
                             </div>
                         </div>
@@ -558,7 +531,7 @@
                                         <li className="flex items-start"><CheckCircleIcon /><div><span className="font-semibold text-gray-200">Keyword Analysis:</span> <span className="text-gray-400">We identify and suggest keywords tailored to your target job roles.</span></div></li>
                                         <li className="flex items-start"><CheckCircleIcon /><div><span className="font-semibold text-gray-200">Impactful Metrics:</span> <span className="text-gray-400">Learn how to quantify your achievements to demonstrate your value.</span></div></li>
                                     </ul>
-                                    <button onClick={() => setPage('resume')} className="mt-8 px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transition-all duration-300">
+                                    <button onClick={() => setPage('analyzer')} className="mt-8 px-8 py-3 text-lg font-semibold text-black bg-[#00C853] rounded-lg shadow-sm hover:bg-green-400 transition-all duration-300">
                                         Get Your Free Analysis
                                     </button>
                                 </div>
@@ -656,15 +629,38 @@
             );
         };
         
-        const ResumeOptimizerPage = () => {
+        const AnalyzerPage = () => {
             const { showNotification } = useAppContext();
+            const [analyzerType, setAnalyzerType] = React.useState('resume');
+            
+            // Resume states
             const [file, setFile] = React.useState(null);
             const [resumeText, setResumeText] = React.useState('');
+            
+            // LinkedIn states
+            const [url, setUrl] = React.useState('');
+
+            // Shared states
             const [report, setReport] = React.useState(null);
             const [isReportUnlocked, setIsReportUnlocked] = React.useState(false);
             const [loading, setLoading] = React.useState(false);
             const [activeView, setActiveView] = React.useState({ type: 'top_fixes', id: null });
             const [openAccordionId, setOpenAccordionId] = React.useState(null);
+
+            const resetState = () => {
+                setFile(null);
+                setResumeText('');
+                setUrl('');
+                setReport(null);
+                setIsReportUnlocked(false);
+                setLoading(false);
+                setActiveView({ type: 'top_fixes', id: null });
+                setOpenAccordionId(null);
+            };
+
+            React.useEffect(() => {
+                resetState();
+            }, [analyzerType]);
 
 
             const getScoreColor = (score) => {
@@ -678,11 +674,6 @@
                 if (!uploadedFile) return;
 
                 setFile(uploadedFile);
-                setReport(null);
-                setIsReportUnlocked(false);
-                setActiveView({ type: 'top_fixes', id: null });
-                setOpenAccordionId(null);
-
                 const reader = new FileReader();
                 reader.onload = async (event) => {
                     const typedarray = new Uint8Array(event.target.result);
@@ -706,14 +697,26 @@
             };
 
             const handleAnalyze = async () => {
-                if (!resumeText) {
-                    showNotification('Please upload a resume to analyze.', 'error');
-                    return;
-                }
+                let result;
                 setLoading(true);
                 setReport(null);
-                setOpenAccordionId(null);
-                const result = await callGeminiAPI(resumeText);
+
+                if (analyzerType === 'resume') {
+                    if (!resumeText) {
+                        showNotification('Please upload a resume to analyze.', 'error');
+                        setLoading(false);
+                        return;
+                    }
+                    result = await callResumeGeminiAPI(resumeText);
+                } else {
+                    if (!url.trim()) {
+                        showNotification('Please enter a LinkedIn profile URL.', 'error');
+                        setLoading(false);
+                        return;
+                    }
+                    result = await callLinkedInGeminiAPI(url);
+                }
+
                 setLoading(false);
 
                 if (result) {
@@ -721,7 +724,7 @@
                     if (result.topFixes && result.topFixes.length > 0) {
                         const firstFix = result.topFixes[0];
                         setActiveView({ type: 'top_fixes', id: firstFix.sectionId });
-                        setOpenAccordionId(firstFix.id); // Set first fix to be open on mobile
+                        setOpenAccordionId(firstFix.id);
                     }
                     showNotification('Free analysis complete!', 'success');
                 } else {
@@ -767,7 +770,7 @@
                     <div className="blur-sm pointer-events-none space-y-6 opacity-60">
                          <div>
                             <h3 className="text-lg font-semibold text-gray-200">Detailed Improvements</h3>
-                            <p className="mt-2 text-sm text-gray-400 bg-gray-800/50 p-3 rounded-md">Every bullet point should showcase a result. Use the STAR method to frame your accomplishments.</p>
+                            <p className="mt-2 text-sm text-gray-400 bg-gray-800/50 p-3 rounded-md">Unlock to see detailed, AI-powered suggestions and examples.</p>
                         </div>
                         <div>
                             <h3 className="text-lg font-semibold text-gray-200">Rewritten Examples (Before/After)</h3>
@@ -827,7 +830,7 @@
                                             <div key={i} className="p-3 border border-gray-700 rounded-lg">
                                                 <p className="text-xs font-semibold text-red-400">Before:</p>
                                                 <p className="text-xs text-gray-400 italic pl-3 border-l-2 border-red-500/50 ml-1 py-1 break-words">"{ex.before}"</p>
-                                                <p className="text-xs font-semibold text-green-400 mt-2">After:</p>
+                                                <p className="text-xs text-semibold text-green-400 mt-2">After:</p>
                                                 <p className="text-xs text-gray-200 pl-3 border-l-2 border-green-500/50 ml-1 py-1 whitespace-pre-wrap break-words">{ex.after}</p>
                                             </div>
                                         ))}
@@ -845,8 +848,8 @@
                 );
             };
 
-            const MainContentPane = () => {
-                if (!activeView.id) return <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 text-center"><p className="text-gray-400">Select an item from the sidebar to see details.</p></div>;
+            const MainContentPane = ({ report, activeView, isReportUnlocked, onUnlock }) => {
+                if (!activeView.id || !report) return <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8 text-center"><p className="text-gray-400">Select an item from the sidebar to see details.</p></div>;
 
                 const section = report.sections.find(s => s.id === activeView.id);
                 if (!section) return null;
@@ -901,7 +904,7 @@
                                         </div>
                                     </div>
                                 ) : (
-                                    <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                                    <LockedContent onUnlock={onUnlock} />
                                 )}
                             </>
                         ) : (
@@ -952,7 +955,7 @@
                                         </div>
                                     </div>
                                 ) : (
-                                    <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
+                                    <LockedContent onUnlock={onUnlock} />
                                 )}
                              </>
                         )}
@@ -960,34 +963,57 @@
                 );
             };
 
+            const AnalyzerInput = () => (
+                <>
+                    <div className="max-w-3xl mx-auto text-center">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">AI Profile Analyzer</h1>
+                        <p className="mt-4 text-gray-400">Get an instant analysis of your Resume or LinkedIn profile to identify weaknesses and outshine the competition.</p>
+                    </div>
+
+                    <div className="max-w-2xl mx-auto mt-12">
+                        <div className="flex justify-center p-1 bg-gray-800 rounded-lg mb-6">
+                            <button onClick={() => setAnalyzerType('resume')} className={`w-1/2 py-2.5 text-sm font-semibold rounded-md transition-colors ${analyzerType === 'resume' ? 'bg-[#00C853] text-black' : 'text-gray-400 hover:text-white'}`}>
+                                Resume Analyzer
+                            </button>
+                            <button onClick={() => setAnalyzerType('linkedin')} className={`w-1/2 py-2.5 text-sm font-semibold rounded-md transition-colors ${analyzerType === 'linkedin' ? 'bg-[#00C853] text-black' : 'text-gray-400 hover:text-white'}`}>
+                                LinkedIn Analyzer
+                            </button>
+                        </div>
+
+                        {analyzerType === 'resume' ? (
+                            <Card className="p-6 sm:p-8 hover:border-[#00C853]/50 transition-colors">
+                                <div className="flex justify-center">
+                                    <label htmlFor="resume-upload" className="cursor-pointer text-center p-8 border-2 border-dashed border-gray-600 rounded-xl hover:border-green-500 hover:bg-gray-800/50 transition-colors w-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                        <p className="mt-2 font-semibold text-white">Click to Upload your Resume</p>
+                                        <p className="text-xs text-gray-500">PDF up to 5MB</p>
+                                    </label>
+                                    <input id="resume-upload" type="file" accept=".pdf" onChange={handleFileChange} className="hidden"/>
+                                </div>
+                                {file && <p className="mt-4 text-sm text-center text-gray-400">Selected: <span className="font-semibold text-gray-200">{file.name}</span></p>}
+                                <button onClick={handleAnalyze} disabled={loading || !file} className="mt-6 w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-transform duration-200 disabled:transform-none hover:scale-105">
+                                    {loading ? 'Analyzing...' : 'Grade My Resume'}
+                                </button>
+                            </Card>
+                        ) : (
+                            <Card className="p-6 sm:p-8 hover:border-[#00C853]/50 transition-colors">
+                                <div className="space-y-4">
+                                    <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste your LinkedIn Profile URL here" className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-[#00C853] focus:outline-none"/>
+                                    <button onClick={handleAnalyze} disabled={loading || !url} className="w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-transform duration-200 disabled:transform-none hover:scale-105">
+                                        {loading ? 'Analyzing...' : 'Analyze My LinkedIn'}
+                                    </button>
+                                </div>
+                            </Card>
+                        )}
+                    </div>
+                </>
+            );
+
             return (
                 <div className="container mx-auto px-4 sm:px-6 py-12 md:py-16 animate-fade-in min-h-screen">
-                    {!report && (
-                        <>
-                            <div className="max-w-3xl mx-auto text-center">
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">AI Resume Grader</h1>
-                                <p className="mt-4 text-gray-400">Get an instant, section-by-section analysis of your resume to identify weaknesses and outshine the competition.</p>
-                            </div>
-                            <div className="max-w-2xl mx-auto mt-12">
-                                <Card className="p-6 sm:p-8 hover:border-[#00C853]/50 transition-colors">
-                                    <div className="flex justify-center">
-                                        <label htmlFor="resume-upload" className="cursor-pointer text-center p-8 border-2 border-dashed border-gray-600 rounded-xl hover:border-green-500 hover:bg-gray-800/50 transition-colors w-full">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                            <p className="mt-2 font-semibold text-white">Click to Upload your Resume</p>
-                                            <p className="text-xs text-gray-500">PDF up to 5MB</p>
-                                        </label>
-                                        <input id="resume-upload" type="file" accept=".pdf" onChange={handleFileChange} className="hidden"/>
-                                    </div>
-                                    {file && <p className="mt-4 text-sm text-center text-gray-400">Selected: <span className="font-semibold text-gray-200">{file.name}</span></p>}
-                                    <button onClick={handleAnalyze} disabled={loading || !file} className="mt-6 w-full py-3 font-semibold text-black bg-[#00C853] rounded-lg hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-transform duration-200 disabled:transform-none hover:scale-105">
-                                        {loading ? 'Analyzing...' : 'Grade My Resume'}
-                                    </button>
-                                </Card>
-                            </div>
-                        </>
-                    )}
-                    
-                    {report && (
+                    {!report ? (
+                        <AnalyzerInput />
+                    ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 animate-slide-in-up">
                             <aside className="lg:col-span-4 xl:col-span-3">
                                 <div className="p-4 rounded-xl bg-gray-900 border border-gray-800 lg:sticky lg:top-24">
@@ -1061,7 +1087,7 @@
                             </aside>
 
                             <main className="hidden lg:block lg:col-span-8 xl:col-span-9">
-                                {activeView.id && <MainContentPane />}
+                                <MainContentPane report={report} activeView={activeView} isReportUnlocked={isReportUnlocked} onUnlock={() => setIsReportUnlocked(true)} />
                             </main>
                         </div>
                     )}
@@ -1221,7 +1247,7 @@
                 switch (page) {
                     case 'home': return <HomePage />;
                     case 'courses': return <CoursesPageThemed />;
-                    case 'resume': return <ResumeOptimizerPage />;
+                    case 'analyzer': return <AnalyzerPage />;
                     case 'freelance': return <FreelancePageThemed />;
                     case 'login': return <LoginPageThemed />;
                     case 'dashboard': return <DashboardPageThemed />;
