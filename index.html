@@ -208,7 +208,12 @@
             **Core Directives:**
             1.  **ATS & Recruiter Focus:** Every piece of advice must prioritize compatibility with modern Applicant Tracking Systems (ATS) and appeal to human recruiters.
             2.  **Strictly Content-Specific:** All findings, scores, tips, and examples MUST be directly derived from the resume text. Do not invent information. Reference specific phrases from the resume where possible.
-            3.  **Scoring Logic:** Scores (0-100) must be calculated logically. A high score requires strong action verbs, quantifiable achievements, relevant keywords, and clear formatting. A low score indicates missing sections, passive language, or lack of detail. The 'overallScore' is an average of the section scores.
+            3.  **Realistic Scoring Logic:** Scores (0-100) must be calculated realistically based *only* on the provided text.
+                * **Missing Sections:** If a key section (e.g., 'Projects', 'Work Experience', 'Summary') is completely absent from the resume text, its score **MUST be 10 or lower**. The corresponding 'freeFindings' should explicitly state that the section is missing.
+                * **Content Quality over Presence:** A section's mere presence is not enough for a high score. For example, if a 'Projects' section exists but only says "Made a website," the score should be low (e.g., 20-30).
+                * **High Score Criteria (80+):** To earn a high score, a section must contain strong action verbs, **quantifiable achievements (e.g., 'increased by 20%', 'reduced time by 5 hours')**, and keywords relevant to a professional role.
+                * **Low Score Criteria (< 50):** A low score indicates passive language, vague descriptions without metrics, or a complete lack of detail.
+                * **Overall Score:** The 'overallScore' is a simple average of all the section scores.
             4.  **Actionable & Detailed Feedback:** 'freeFindings' should be high-level observations. 'quickTips' are simple, immediate fixes. 'lockedContent' must provide deep, expert-level advice, with 'detailedTips' explaining the "why," and 'examples' showing concrete, rewritten improvements based on the user's own text.
             5.  **Strict JSON Output:** The entire response must be a single, valid JSON object adhering to the schema below. No extra text, markdown, or explanations outside the JSON.
 
@@ -330,7 +335,10 @@
             **Core Directives:**
             1.  **Recruiter & Networking Focus:** Every piece of advice must be geared towards optimizing the profile for search visibility (LinkedIn SEO), recruiter appeal, and professional networking.
             2.  **Strictly Content-Specific:** All findings, scores, tips, and examples must be based on what a strong LinkedIn profile should contain. When creating 'before' examples, infer what a weak version might look like if the user's profile is strong, or use their actual (implied) content if it's weak.
-            3.  **Scoring Logic:** Scores (0-100) must be calculated logically. A high score requires a professional photo, a keyword-rich headline, a compelling 'About' section, detailed experience with metrics, and an active skills section. The 'overallScore' is an average of the section scores.
+            3.  **Realistic Scoring Logic:** Scores (0-100) must be calculated logically based on best practices for a strong professional profile.
+                * **Weak Content:** Vague, generic, or default content must result in a low score. For example, a headline of just "Student at University" **MUST receive a score below 30**. An empty or very brief 'About' section should also be scored very low.
+                * **High Score Criteria (80+):** To earn a high score, a section must be highly optimized. A headline needs multiple keywords. The 'About' section must tell a story. 'Experience' entries must have quantified achievements. The 'Skills' section should be populated and have endorsements (which you can infer as a best practice to recommend).
+                * **Overall Score:** The 'overallScore' is a simple average of all the section scores.
             4.  **Actionable & Detailed Feedback:** 'freeFindings' are high-level observations. 'quickTips' are simple fixes. 'lockedContent' must provide deep, expert-level advice, with 'detailedTips' explaining the "why," and 'examples' showing concrete, rewritten improvements.
             5.  **Strict JSON Output:** The entire response must be a single, valid JSON object adhering to the schema below. No extra text or explanations.
 
@@ -1501,4 +1509,5 @@
     </script>
 </body>
 </html>
+
 
