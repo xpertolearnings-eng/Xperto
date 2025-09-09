@@ -653,7 +653,6 @@
             const [isReportUnlocked, setIsReportUnlocked] = React.useState(false);
             const [loading, setLoading] = React.useState(false);
             const [activeView, setActiveView] = React.useState({ type: 'top_fixes', id: null });
-            const [expandedId, setExpandedId] = React.useState(null);
 
             const getScoreColor = (score) => {
                 if (score <= 60) return '#ef4444'; // Red
@@ -711,11 +710,6 @@
                 } else {
                     showNotification('Analysis failed. Please try again.', 'error');
                 }
-            };
-
-            const handleAccordionClick = (type, id, uniqueKey) => {
-                setActiveView({ type, id });
-                setExpandedId(expandedId === uniqueKey ? null : uniqueKey);
             };
 
             const ScoreDonut = ({ score }) => {
@@ -905,43 +899,17 @@
                                     
                                     <h3 className="font-semibold text-gray-200 mt-6 mb-3">Top Fixes</h3>
                                     <div className="space-y-2">
-                                        {(report.topFixes || []).map(fix => {
-                                            const section = report.sections.find(s => s.id === fix.sectionId);
-                                            return (
-                                            <React.Fragment key={fix.id}>
-                                                <button onClick={() => handleAccordionClick('top_fixes', fix.sectionId, fix.id)}
-                                                    className={`w-full text-left p-3 flex items-center transition-colors duration-200 border-2 ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'} ${expandedId === fix.id ? 'rounded-t-lg' : 'rounded-lg'}`}>
-                                                    <BadgeScore score={fix.score} />
-                                                    <div className="ml-3 flex-grow overflow-hidden min-w-0">
-                                                        <p className="font-semibold text-gray-100 truncate">{fix.title}</p>
-                                                        <p className="text-xs text-gray-400 truncate">{fix.hint}</p>
-                                                    </div>
-                                                    <ChevronRightIcon />
-                                                </button>
-                                                <div className={`lg:hidden transition-all duration-500 ease-in-out overflow-hidden ${expandedId === fix.id ? 'max-h-[2000px]' : 'max-h-0'}`}>
-                                                    <div className="p-4 bg-gray-800/50 rounded-b-lg border-x border-b border-gray-700">
-                                                         <p className="text-gray-400 mb-6 text-sm break-words">This is a high-impact change for the <span className="font-semibold text-gray-300">{section.title}</span> section.</p>
-                                                         <div className="border-t border-gray-700 pt-6">
-                                                             <h3 className="text-lg font-semibold text-white">Key Findings</h3>
-                                                              <ul className="mt-3 space-y-2">
-                                                                  {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{finding}</span></li>)}
-                                                              </ul>
-                                                         </div>
-                                                         <div className="mt-6">
-                                                             <h3 className="text-lg font-semibold text-white">Free Quick Fixes</h3>
-                                                             <ul className="mt-3 space-y-2">
-                                                                 {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{tip}</span></li>)}
-                                                             </ul>
-                                                         </div>
-                                                         {isReportUnlocked ? (
-                                                             <div className="mt-8 space-y-8 animate-fade-in"></div>
-                                                         ) : (
-                                                             <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
-                                                         )}
-                                                    </div>
+                                        {(report.topFixes || []).map(fix => (
+                                            <button key={fix.id} onClick={() => setActiveView({ type: 'top_fixes', id: fix.sectionId })}
+                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
+                                                <BadgeScore score={fix.score} />
+                                                <div className="ml-3 flex-grow overflow-hidden min-w-0">
+                                                    <p className="font-semibold text-gray-100 truncate">{fix.title}</p>
+                                                    <p className="text-xs text-gray-400 truncate">{fix.hint}</p>
                                                 </div>
-                                            </React.Fragment>
-                                        )})}
+                                                <ChevronRightIcon />
+                                            </button>
+                                        ))}
                                     </div>
                                     
                                     <div className="border-t border-gray-700 my-4"></div>
@@ -949,65 +917,17 @@
                                     <h3 className="font-semibold text-gray-200 mb-3">Detailed Report</h3>
                                     <div className="space-y-2">
                                         {(report.sections || []).map(section => (
-                                            <React.Fragment key={section.id}>
-                                                <button onClick={() => handleAccordionClick('section', section.id, section.id)}
-                                                    className={`w-full text-left p-3 flex items-center transition-colors duration-200 border-2 ${activeView.type === 'section' && activeView.id === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'} ${expandedId === section.id ? 'rounded-t-lg' : 'rounded-lg'}`}>
-                                                    <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
-                                                    <div className={`font-bold text-lg`} style={{color: getScoreColor(section.score)}}>{section.score}</div>
-                                                </button>
-                                                <div className={`lg:hidden transition-all duration-500 ease-in-out overflow-hidden ${expandedId === section.id ? 'max-h-[2000px]' : 'max-h-0'}`}>
-                                                    <div className="p-4 bg-gray-800/50 rounded-b-lg border-x border-b border-gray-700">
-                                                        <div className="border-b border-gray-700 pb-6">
-                                                            <h3 className="text-lg font-semibold text-white">Free Findings</h3>
-                                                            <ul className="mt-3 space-y-2">
-                                                                {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{finding}</span></li>)}
-                                                            </ul>
-                                                        </div>
-                                                         <div className="mt-6">
-                                                            <h3 className="text-lg font-semibold text-white">Free Quick Fixes</h3>
-                                                            <ul className="mt-3 space-y-2">
-                                                                {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{tip}</span></li>)}
-                                                            </ul>
-                                                        </div>
-                                                        
-                                                        {isReportUnlocked && section.lockedContent ? (
-                                                            <div className="mt-8 space-y-8 animate-fade-in">
-                                                                <div>
-                                                                    <h3 className="text-lg md:text-xl font-bold text-green-400">Detailed Improvements</h3>
-                                                                    <ul className="mt-3 list-disc list-inside text-gray-300 space-y-2 break-words">
-                                                                        {section.lockedContent.detailedTips.map((tip, i) => <li key={i}>{tip}</li>)}
-                                                                    </ul>
-                                                                </div>
-                                                                 <div>
-                                                                    <h3 className="text-lg md:text-xl font-bold text-green-400">Rewritten Examples</h3>
-                                                                    <div className="mt-3 space-y-4">
-                                                                    {section.lockedContent.examples.map((ex, i) => (
-                                                                        <div key={i} className="p-4 border border-gray-700 rounded-lg">
-                                                                            <p className="text-sm font-semibold text-red-400">Before:</p>
-                                                                            <p className="text-sm text-gray-400 italic pl-4 border-l-2 border-red-500/50 ml-2 py-1 break-words">"{ex.before}"</p>
-                                                                            <p className="text-sm font-semibold text-green-400 mt-3">After:</p>
-                                                                            <p className="text-sm text-gray-200 pl-4 border-l-2 border-green-500/50 ml-2 py-1 whitespace-pre-wrap break-words">{ex.after}</p>
-                                                                        </div>
-                                                                    ))}
-                                                                    </div>
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="text-lg md:text-xl font-bold text-green-400">Why It Matters</h3>
-                                                                    <p className="mt-2 text-gray-300 break-words">{section.lockedContent.explanation}</p>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </React.Fragment>
+                                            <button key={section.id} onClick={() => setActiveView({ type: 'section', id: section.id })}
+                                                className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'section' && activeView.id === section.id ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
+                                                <p className="font-semibold text-gray-100 flex-grow">{section.title}</p>
+                                                <div className={`font-bold text-lg`} style={{color: getScoreColor(section.score)}}>{section.score}</div>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
                             </aside>
 
-                            <main className="hidden lg:block lg:col-span-8 xl:col-span-9">
+                            <main className="lg:col-span-8 xl:col-span-9">
                                 {activeView.id && <MainContentPane />}
                             </main>
                         </div>
@@ -1199,4 +1119,3 @@
     </script>
 </body>
 </html>
-
