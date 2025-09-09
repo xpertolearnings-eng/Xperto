@@ -729,7 +729,12 @@
                         console.error(`Attempt ${attempt} failed:`, error);
                         if (attempt === maxAttempts) {
                             setLoading(false);
-                            showNotification('Analysis failed after multiple attempts. Please try again later.', 'error');
+                            const errorMessage = error.message.toLowerCase();
+                            if (errorMessage.includes("503") || errorMessage.includes("overloaded")) {
+                                showNotification('AI analyzer is busy. Please try again in a moment.', 'error');
+                            } else {
+                                showNotification('Analysis failed after multiple attempts. Please try again.', 'error');
+                            }
                             return;
                         }
                         // Wait 1 second before retrying
@@ -1298,4 +1303,5 @@
     </script>
 </body>
 </html>
+
 
