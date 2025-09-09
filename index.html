@@ -785,15 +785,15 @@
                                 
                                 <div className="border-t border-gray-700 pt-6">
                                      <h3 className="text-lg font-semibold text-white">Key Findings</h3>
-                                      <ul className="mt-3 space-y-2 break-words">
-                                          {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span>{finding}</span></li>)}
+                                      <ul className="mt-3 space-y-2">
+                                          {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{finding}</span></li>)}
                                       </ul>
                                 </div>
                                 
                                 <div className="mt-6">
                                     <h3 className="text-lg font-semibold text-white">Free Quick Fixes</h3>
-                                    <ul className="mt-3 space-y-2 break-words">
-                                        {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span>{tip}</span></li>)}
+                                    <ul className="mt-3 space-y-2">
+                                        {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{tip}</span></li>)}
                                     </ul>
                                 </div>
 
@@ -808,21 +808,21 @@
                         ) : (
                              <>
                                 <div className={`p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between bg-gray-800 gap-4 sm:gap-2`}>
-                                    <h2 className="flex-grow text-xl md:text-2xl font-bold text-white text-center sm:text-left break-words">{section.title}</h2>
+                                    <h2 className="flex-grow text-xl md:text-2xl font-bold text-white text-center sm:text-left break-words min-w-0">{section.title}</h2>
                                     <div className={`flex items-center justify-center rounded-full bg-gray-900 font-bold w-14 h-14 text-2xl border-2 flex-shrink-0`} style={{borderColor: getScoreColor(section.score), color: getScoreColor(section.score)}}>
                                         {section.score}
                                     </div>
                                 </div>
                                 <div className="mt-6 border-b border-gray-700 pb-6">
                                     <h3 className="text-lg font-semibold text-white">Free Findings</h3>
-                                    <ul className="mt-3 space-y-2 break-words">
-                                        {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span>{finding}</span></li>)}
+                                    <ul className="mt-3 space-y-2">
+                                        {(section.freeFindings || []).map((finding, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{finding}</span></li>)}
                                     </ul>
                                 </div>
                                  <div className="mt-6">
                                     <h3 className="text-lg font-semibold text-white">Free Quick Fixes</h3>
-                                    <ul className="mt-3 space-y-2 break-words">
-                                        {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span>{tip}</span></li>)}
+                                    <ul className="mt-3 space-y-2">
+                                        {(section.quickTips || []).map((tip, i) => <li key={i} className="flex items-start text-gray-300"><CheckIcon /><span className="min-w-0 break-words">{tip}</span></li>)}
                                     </ul>
                                 </div>
                                 
@@ -889,7 +889,7 @@
                     )}
                     
                     {report && (
-                        <div className="grid lg:grid-cols-12 gap-4 md:gap-8 animate-slide-in-up">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 animate-slide-in-up">
                             <aside className="lg:col-span-4 xl:col-span-3">
                                 <div className="p-4 rounded-xl bg-gray-900 border border-gray-800 lg:sticky lg:top-24">
                                     <div className="flex flex-col items-center">
@@ -903,7 +903,7 @@
                                             <button key={fix.id} onClick={() => setActiveView({ type: 'top_fixes', id: fix.sectionId })}
                                                 className={`w-full text-left p-3 rounded-lg flex items-center transition-colors duration-200 border-2 ${activeView.type === 'top_fixes' && activeView.id === fix.sectionId ? `bg-gray-800 border-green-500` : 'border-transparent hover:bg-gray-800/50'}`}>
                                                 <BadgeScore score={fix.score} />
-                                                <div className="ml-3 flex-grow overflow-hidden">
+                                                <div className="ml-3 flex-grow overflow-hidden min-w-0">
                                                     <p className="font-semibold text-gray-100 truncate">{fix.title}</p>
                                                     <p className="text-xs text-gray-400 truncate">{fix.hint}</p>
                                                 </div>
@@ -1119,4 +1119,3 @@
     </script>
 </body>
 </html>
-
