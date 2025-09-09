@@ -139,21 +139,28 @@
 
         // --- GEMINI API CALL HELPERS ---
         const parseGeminiResponse = (responseText) => {
-            let jsonString = responseText.trim();
-            if (jsonString.startsWith('```json')) {
-                jsonString = jsonString.substring(7, jsonString.length - 3).trim();
-            } else if (jsonString.startsWith('```')) {
-                jsonString = jsonString.substring(3, jsonString.length - 3).trim();
-            }
+            // The backend now sends clean JSON, so we just need to parse it.
+            // The old logic for cleaning markdown is kept as a fallback.
+            try {
+                return JSON.parse(responseText);
+            } catch (e) {
+                console.warn("Response was not clean JSON, attempting to clean markdown...");
+                let jsonString = responseText.trim();
+                if (jsonString.startsWith('```json')) {
+                    jsonString = jsonString.substring(7, jsonString.length - 3).trim();
+                } else if (jsonString.startsWith('```')) {
+                    jsonString = jsonString.substring(3, jsonString.length - 3).trim();
+                }
 
-            const startIndex = jsonString.indexOf('{');
-            const endIndex = jsonString.lastIndexOf('}');
-            if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-                 throw new Error("Could not find a valid JSON object in the server response.");
+                const startIndex = jsonString.indexOf('{');
+                const endIndex = jsonString.lastIndexOf('}');
+                if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+                     throw new Error("Could not find a valid JSON object in the server response.");
+                }
+                
+                const finalJsonString = jsonString.substring(startIndex, endIndex + 1);
+                return JSON.parse(finalJsonString);
             }
-            
-            const finalJsonString = jsonString.substring(startIndex, endIndex + 1);
-            return JSON.parse(finalJsonString); 
         };
         
         const callGeminiAPI = async (systemPrompt) => {
@@ -170,15 +177,21 @@
                     throw new Error(`Network response was not ok: ${response.status}. ${errorText}`);
                 }
                 
+                // The backend function now returns clean JSON, so we expect text that is directly parsable.
                 const responseText = await response.text();
                 try {
-                    const report = parseGeminiResponse(responseText);
+                    // Because the Netlify function sends a clean JSON string as the body,
+                    // we can often just use response.json() if the content-type header is set correctly.
+                    // But using response.text() and then parsing is safer.
+                    const report = JSON.parse(responseText);
                     console.log("Received and parsed detailed report from Netlify function:", report);
                     return report;
                 } catch (e) {
                     console.error("Failed to parse the JSON response from the server.", e);
                     console.error("Raw response from server:", responseText);
-                    throw new Error("Invalid data format received from the server.");
+                    // Attempt to clean it up as a fallback
+                    const report = parseGeminiResponse(responseText);
+                    return report;
                 }
 
             } catch (error) {
@@ -188,49 +201,206 @@
         };
 
         const callResumeGeminiAPI = (resumeText) => {
-            console.log("Calling Netlify Function for RESUME analysis...");
+            console.log("Calling Netlify Function for RESUME analysis with improved prompt...");
             const systemPrompt = `
-            You are an expert ATS-focused resume analyzer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided resume text.
+            You are 'Xperto AI', a world-class, ATS-focused resume analyzer for the edtech platform Xperto. Your analysis must be sharp, specific, and directly based on the provided resume text. You must not give generic advice. Your goal is to generate a structured, actionable report in a strict JSON format.
+
             **Core Directives:**
-            1.  **ATS First:** All advice must align with modern Applicant Tracking System (ATS) best practices.
-            2.  **Strict JSON Output:** Your entire response MUST be a single, valid JSON object that strictly adheres to the schema below.
-            3.  **Content-Specific Analysis:** Every finding, score, and tip must be directly derived from the resume text provided.
+            1.  **ATS & Recruiter Focus:** Every piece of advice must prioritize compatibility with modern Applicant Tracking Systems (ATS) and appeal to human recruiters.
+            2.  **Strictly Content-Specific:** All findings, scores, tips, and examples MUST be directly derived from the resume text. Do not invent information. Reference specific phrases from the resume where possible.
+            3.  **Scoring Logic:** Scores (0-100) must be calculated logically. A high score requires strong action verbs, quantifiable achievements, relevant keywords, and clear formatting. A low score indicates missing sections, passive language, or lack of detail. The 'overallScore' is an average of the section scores.
+            4.  **Actionable & Detailed Feedback:** 'freeFindings' should be high-level observations. 'quickTips' are simple, immediate fixes. 'lockedContent' must provide deep, expert-level advice, with 'detailedTips' explaining the "why," and 'examples' showing concrete, rewritten improvements based on the user's own text.
+            5.  **Strict JSON Output:** The entire response must be a single, valid JSON object adhering to the schema below. No extra text, markdown, or explanations outside the JSON.
+
             **JSON Schema to Follow:**
             {
-              "overallScore": 0, "overallSummary": "", "topFixes": [{ "id": "", "title": "", "hint": "", "score": 0, "sectionId": "" }],
+              "overallScore": "<number - Average score of all sections>",
+              "overallSummary": "<string - A 2-sentence summary of the resume's key strengths and primary area for improvement.>",
+              "topFixes": [
+                {
+                  "id": "<string - Unique ID, e.g., 'fix1'>",
+                  "title": "<string - A short, impactful title for the most critical issue, e.g., 'Quantify Achievements'>",
+                  "hint": "<string - A brief explanation of why this fix is important, e.g., 'Adding numbers shows your impact.'>",
+                  "score": "<number - A score from 1-10 indicating the impact of this fix (10 is highest impact).>",
+                  "sectionId": "<string - The ID of the section this fix applies to, e.g., 'experience'>"
+                }
+              ],
               "sections": [
-                { "id": "summary", "title": "Summary", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "experience", "title": "Experience", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "skills", "title": "Skills", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "projects", "title": "Projects", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "education", "title": "Education", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "other", "title": "Achievements/Other", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }}
+                {
+                  "id": "summary",
+                  "title": "Professional Summary",
+                  "score": "<number - 0-100 score for this section>",
+                  "freeFindings": ["<string - e.g., 'Summary section is present.' or 'Summary is too long.'>"],
+                  "quickTips": ["<string - e.g., 'Tailor the summary to the job description.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - In-depth advice, e.g., 'Incorporate 2-3 key skills from your target role directly into your summary to immediately catch a recruiter's eye.'>"],
+                    "examples": [{ "before": "<string - Snippet from user's resume>", "after": "<string - A rewritten, improved version>" }],
+                    "explanation": "<string - Why the 'after' version is better for ATS and recruiters.>"
+                  }
+                },
+                {
+                  "id": "experience",
+                  "title": "Work Experience",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Used action verbs like "Managed" and "Developed".'>"],
+                  "quickTips": ["<string - e.g., 'Start each bullet point with a strong action verb.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - e.g., 'Focus on the STAR method (Situation, Task, Action, Result) to frame your accomplishments. Quantify results with metrics like percentages, revenue figures, or time saved.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Responsible for managing social media accounts.'>", "after": "<string - e.g., 'Grew social media engagement by 35% over 6 months by implementing a data-driven content strategy across Instagram and Twitter.'>" }],
+                    "explanation": "<string - e.g., 'The "after" example uses a specific metric (35%) and action-oriented language, making the achievement much more concrete and impressive.'>"
+                  }
+                },
+                {
+                  "id": "skills",
+                  "title": "Skills",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'A good mix of technical and soft skills is listed.'>"],
+                  "quickTips": ["<string - e.g., 'Separate skills into categories like "Programming Languages", "Tools", and "Certifications".'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - e.g., 'Ensure your skills section mirrors the keywords found in job descriptions for your target roles. ATS often screen for these exact keywords.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Skills: Python, Leadership, JavaScript'>", "after": "<string - e.g., 'Technical Skills: Python (Pandas, NumPy), JavaScript (React, Node.js), SQL, AWS (S3, EC2)\\nSoft Skills: Project Management, Team Leadership, Agile Methodologies'>" }],
+                    "explanation": "<string - Categorization and adding specific libraries/frameworks makes your proficiency clearer and is better for keyword matching.'>"
+                  }
+                },
+                {
+                  "id": "projects",
+                  "title": "Projects",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Project descriptions are clear.'>"],
+                  "quickTips": ["<string - e.g., 'Include a link to the live project or GitHub repository.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - e.g., 'For each project, briefly describe the problem you solved, the tech stack you used, and your specific contribution.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Made a website.'>", "after": "<string - e.g., 'Portfolio Website: Developed a responsive personal portfolio using React and Tailwind CSS, deployed on Vercel. Implemented a contact form with Netlify Forms.'>" }],
+                    "explanation": "<string - The improved version clearly states the purpose, technologies, and features, demonstrating practical skills.'>"
+                  }
+                },
+                {
+                  "id": "education",
+                  "title": "Education",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Education section is formatted correctly.'>"],
+                  "quickTips": ["<string - e.g., 'Include your expected graduation date if you are still a student.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - e.g., 'If your GPA is above 3.5 (or equivalent), include it. You can also list relevant coursework to showcase specialized knowledge.'>"],
+                    "examples": [{ "before": "<string - e.g., 'B.Tech, Computer Science'>", "after": "<string - e.g., 'Bachelor of Technology in Computer Science, XYZ University (Expected May 2025)\\nCGPA: 8.5/10\\nRelevant Coursework: Data Structures & Algorithms, Database Management Systems, Operating Systems.'>" }],
+                    "explanation": "<string - Adding GPA, graduation date, and relevant courses provides recruiters with more context about your academic performance and knowledge base.'>"
+                  }
+                },
+                {
+                  "id": "other",
+                  "title": "Achievements/Other",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Includes certifications.'>"],
+                  "quickTips": ["<string - e.g., 'Create a separate section for "Certifications" or "Awards" if you have several.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - e.g., 'Quantify achievements from hackathons or competitions (e.g., "1st place out of 50 teams"). Mention leadership roles in clubs or organizations.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Won a hackathon.'>", "after": "<string - e.g., 'Winner, Smart India Hackathon 2023: Led a team of 4 to develop a prize-winning solution for a healthcare challenge statement, placing 1st among 100+ competing teams.'>" }],
+                    "explanation": "<string - Specificity about the event, your role, and the scale of your achievement makes it far more impactful.'>"
+                  }
+                }
               ]
             }
-            **Resume Text to Analyze:** --- ${resumeText} ---`;
+
+            **Resume Text to Analyze:**
+            ---
+            ${resumeText}
+            ---`;
             return callGeminiAPI(systemPrompt);
         };
         
         const callLinkedInGeminiAPI = (profileUrl) => {
-            console.log("Calling Netlify Function for LINKEDIN analysis...");
+            console.log("Calling Netlify Function for LINKEDIN analysis with improved prompt...");
             const systemPrompt = `
-            You are an expert LinkedIn profile optimizer for a platform called Xperto. Your goal is to create a structured, actionable report based on the provided LinkedIn profile URL. You must analyze the profile based on common knowledge of what makes a strong LinkedIn presence.
+            You are 'Xperto AI', a world-class LinkedIn profile optimizer for the edtech platform Xperto. Your analysis must be sharp, specific, and focused on making the user's profile highly attractive to recruiters. You must not give generic advice. Your goal is to generate a structured, actionable report in a strict JSON format. You will be given a URL, and you should analyze the profile based on the public information typically available on a LinkedIn profile.
+
             **Core Directives:**
-            1.  **Recruiter Focus:** All advice must be geared towards making the profile attractive to recruiters and hiring managers.
-            2.  **Strict JSON Output:** Your entire response MUST be a single, valid JSON object that strictly adheres to the schema below.
-            3.  **Actionable Advice:** Every tip and example must be practical and easy for a student or early-career professional to implement.
+            1.  **Recruiter & Networking Focus:** Every piece of advice must be geared towards optimizing the profile for search visibility (LinkedIn SEO), recruiter appeal, and professional networking.
+            2.  **Strictly Content-Specific:** All findings, scores, tips, and examples must be based on what a strong LinkedIn profile should contain. When creating 'before' examples, infer what a weak version might look like if the user's profile is strong, or use their actual (implied) content if it's weak.
+            3.  **Scoring Logic:** Scores (0-100) must be calculated logically. A high score requires a professional photo, a keyword-rich headline, a compelling 'About' section, detailed experience with metrics, and an active skills section. The 'overallScore' is an average of the section scores.
+            4.  **Actionable & Detailed Feedback:** 'freeFindings' are high-level observations. 'quickTips' are simple fixes. 'lockedContent' must provide deep, expert-level advice, with 'detailedTips' explaining the "why," and 'examples' showing concrete, rewritten improvements.
+            5.  **Strict JSON Output:** The entire response must be a single, valid JSON object adhering to the schema below. No extra text or explanations.
+
             **JSON Schema to Follow:**
             {
-              "overallScore": 0, "overallSummary": "", "topFixes": [{ "id": "", "title": "", "hint": "", "score": 0, "sectionId": "" }],
+              "overallScore": "<number - Average score of all sections>",
+              "overallSummary": "<string - A 2-sentence summary of the profile's key strengths and primary area for improvement.>",
+              "topFixes": [
+                {
+                  "id": "<string - Unique ID, e.g., 'fix_headline'>",
+                  "title": "<string - A short, impactful title, e.g., 'Optimize Your Headline'>",
+                  "hint": "<string - Brief explanation, e.g., 'Your headline is crucial for search results.'>",
+                  "score": "<number - Impact score 1-10>",
+                  "sectionId": "<string - The ID of the section this fix applies to, e.g., 'headline'>"
+                }
+              ],
               "sections": [
-                { "id": "profile_picture", "title": "Profile Picture & Banner", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "headline", "title": "Headline", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "about", "title": "About Section", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "experience", "title": "Experience Section", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }},
-                { "id": "skills", "title": "Skills & Endorsements", "score": 0, "freeFindings": [], "quickTips": [], "lockedContent": { "detailedTips": [], "examples": [{ "before": "", "after": "" }], "explanation": "" }}
+                {
+                  "id": "profile_picture",
+                  "title": "Profile Picture & Banner",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Has a professional headshot.'>"],
+                  "quickTips": ["<string - e.g., 'Ensure your banner image reflects your professional interests or industry.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - A professional photo should be high-resolution, with a plain background, where you are looking at the camera and smiling. A custom banner is much better than the default.'>"],
+                    "examples": [{ "before": "<string - A description of a weak photo/banner, e.g., 'Using a distant group photo and default blue banner.'>", "after": "<string - A description of a strong photo/banner, e.g., 'Clear, friendly headshot with a custom banner that includes keywords like "Software Development | React | Cloud Computing".'>" }],
+                    "explanation": "<string - First impressions matter. A professional photo and custom banner make your profile look complete and serious.'>"
+                  }
+                },
+                {
+                  "id": "headline",
+                  "title": "Headline",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Headline clearly states current role.'>"],
+                  "quickTips": ["<string - e.g., 'Add keywords related to your target roles.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - Your headline is prime real estate for keywords. Go beyond just your job title. Include key skills, technologies, and what you're passionate about. Use the pipe character '|' to separate ideas.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Student at XYZ University'>", "after": "<string - e.g., 'Aspiring Software Engineer | React, Node.js, and Python Developer | Seeking Internships in Web Development'>" }],
+                    "explanation": "<string - The 'after' headline is rich with keywords recruiters search for, making the profile much more discoverable.'>"
+                  }
+                },
+                {
+                  "id": "about",
+                  "title": "About Section",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'About section provides a good overview.'>"],
+                  "quickTips": ["<string - e.g., 'End with a clear call to action, like inviting people to connect.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - Structure your 'About' section in 3 paragraphs: 1) Who you are and what you're excited about. 2) Your key skills and 1-2 top achievements. 3) What you're looking for and how to contact you. Sprinkle in relevant keywords.'>"],
+                    "examples": [{ "before": "<string - e.g., 'I am a student studying computer science.'>", "after": "<string - e.g., 'Passionate final-year Computer Science student with a strong foundation in full-stack web development... [continues with more detail]... Open to connecting about software engineering internship opportunities.'>" }],
+                    "explanation": "<string - A structured 'About' section tells your professional story, showcases your skills, and makes it easy for recruiters to understand your goals.'>"
+                  }
+                },
+                {
+                  "id": "experience",
+                  "title": "Experience Section",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Experience descriptions are present.'>"],
+                  "quickTips": ["<string - e.g., 'Use 2-3 bullet points for each role.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - Just like a resume, use action verbs and quantify your achievements with metrics for each role or project listed. This demonstrates impact, not just responsibility.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Wrote code for the company website.'>", "after": "<string - e.g., '- Refactored the checkout process component in React, reducing bug reports by 15% and improving user session duration.\\n- Collaborated with a team of 3 to deploy a new feature using CI/CD pipelines.'>" }],
+                    "explanation": "<string - Specific, quantified bullet points are far more persuasive and give a clear picture of your capabilities.'>"
+                  }
+                },
+                {
+                  "id": "skills",
+                  "title": "Skills & Endorsements",
+                  "score": "<number - 0-100 score>",
+                  "freeFindings": ["<string - e.g., 'Has more than 10 skills listed.'>"],
+                  "quickTips": ["<string - e.g., 'Pin your top 3 most relevant skills to the top of the list.'>"],
+                  "lockedContent": {
+                    "detailedTips": ["<string - Aim for at least 15-20 relevant skills. The more skills you have that match a job description, the higher you may rank in recruiter searches. Actively seek endorsements from colleagues and professors for your top skills.'>"],
+                    "examples": [{ "before": "<string - e.g., 'Only having 5 skills listed with no endorsements.'>", "after": "<string - e.g., 'Having 20+ skills, with the top 3 (e.g., "React.js", "Node.js", "Python") pinned and endorsed by multiple connections.'>" }],
+                    "explanation": "<string - A robust skills section with endorsements provides social proof of your abilities and significantly boosts your profile's visibility in searches.'>"
+                  }
+                }
               ]
             }
-            **LinkedIn Profile URL to Analyze:** --- ${profileUrl} ---`;
+
+            **LinkedIn Profile URL to Analyze:**
+            ---
+            ${profileUrl}
+            ---`;
             return callGeminiAPI(systemPrompt);
         };
 
@@ -1303,5 +1473,3 @@
     </script>
 </body>
 </html>
-
-
