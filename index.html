@@ -823,6 +823,10 @@
                                         ))}
                                     </div>
                                 </div>
+                                <div>
+                                    <h3 className="text-md font-bold text-green-400">Why It Matters</h3>
+                                    <p className="mt-2 text-sm text-gray-300 break-words">{section.lockedContent.explanation}</p>
+                                </div>
                             </div>
                         ) : (
                             <LockedContent onUnlock={onUnlock} />
@@ -860,9 +864,31 @@
                                     </ul>
                                 </div>
 
-                                {isReportUnlocked ? (
+                                {isReportUnlocked && section.lockedContent ? (
                                     <div className="mt-8 space-y-8 animate-fade-in">
-                                        {/* Unlocked content will appear here */}
+                                        <div>
+                                            <h3 className="text-lg md:text-xl font-bold text-green-400">Detailed Improvements</h3>
+                                            <ul className="mt-3 list-disc list-inside text-gray-300 space-y-2 break-words">
+                                                {section.lockedContent.detailedTips.map((tip, i) => <li key={i}>{tip}</li>)}
+                                            </ul>
+                                        </div>
+                                         <div>
+                                            <h3 className="text-lg md:text-xl font-bold text-green-400">Rewritten Examples</h3>
+                                            <div className="mt-3 space-y-4">
+                                            {section.lockedContent.examples.map((ex, i) => (
+                                                <div key={i} className="p-4 border border-gray-700 rounded-lg">
+                                                    <p className="text-sm font-semibold text-red-400">Before:</p>
+                                                    <p className="text-sm text-gray-400 italic pl-4 border-l-2 border-red-500/50 ml-2 py-1 break-words">"{ex.before}"</p>
+                                                    <p className="text-sm font-semibold text-green-400 mt-3">After:</p>
+                                                    <p className="text-sm text-gray-200 pl-4 border-l-2 border-green-500/50 ml-2 py-1 whitespace-pre-wrap break-words">{ex.after}</p>
+                                                </div>
+                                            ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg md:text-xl font-bold text-green-400">Why It Matters</h3>
+                                            <p className="mt-2 text-gray-300 break-words">{section.lockedContent.explanation}</p>
+                                        </div>
                                     </div>
                                 ) : (
                                     <LockedContent onUnlock={() => setIsReportUnlocked(true)} />
@@ -1216,3 +1242,4 @@
     </script>
 </body>
 </html>
+
