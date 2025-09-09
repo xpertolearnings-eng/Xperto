@@ -230,14 +230,24 @@
                 
                 const responseText = await response.text();
                 try {
-                    const startIndex = responseText.indexOf('{');
-                    const endIndex = responseText.lastIndexOf('}');
+                    // More robust JSON parsing to handle potential markdown wrappers from the API
+                    let jsonString = responseText.trim();
+
+                    if (jsonString.startsWith('```json')) {
+                        jsonString = jsonString.substring(7, jsonString.length - 3).trim();
+                    } else if (jsonString.startsWith('```')) {
+                        jsonString = jsonString.substring(3, jsonString.length - 3).trim();
+                    }
+
+                    // Ensure we are parsing a valid object
+                    const startIndex = jsonString.indexOf('{');
+                    const endIndex = jsonString.lastIndexOf('}');
                     if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
                          throw new Error("Could not find a valid JSON object in the server response.");
                     }
                     
-                    const jsonString = responseText.substring(startIndex, endIndex + 1);
-                    const report = JSON.parse(jsonString); 
+                    const finalJsonString = jsonString.substring(startIndex, endIndex + 1);
+                    const report = JSON.parse(finalJsonString); 
                     console.log("Received and parsed detailed report from Netlify function:", report);
                     return report;
                 } catch (e) {
