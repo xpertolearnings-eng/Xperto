@@ -1,2 +1,5 @@
 [functions]
-  directory = "netlify/functions/"
+directory = "netlify/functions/"
+
+[functions."call-gemini"]
+timeout = 25
